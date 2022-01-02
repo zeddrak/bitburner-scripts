@@ -1,7 +1,9 @@
 /** @param {NS} ns **/
-//args: target, manipulateTix, uid
+//args: target, uid, threads, manipulateTix
 export async function main(ns) {
-    const target = (ns.args && ns.args.length > 0) ? ns.args[0] : '';
-    const tix = (ns.args && ns.args.length > 1) ? ns.args[1] : false;
-    if (target!='') { await ns.hack(target, {stock: tix}); }
+    if (ns.args[0]) {
+        if (ns.args.length > 2) {
+            await ns.hack(ns.args[0], {threads: ns.args[2], stock: ns.args[3]??false});
+        } else { await ns.hack(ns.args[0]); }
+    }
 }
