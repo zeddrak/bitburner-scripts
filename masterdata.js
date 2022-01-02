@@ -84,11 +84,11 @@ function buildOthers(ns) {
 				smallRam = smlRam * sdat.maxRam;
 				sdat.coreMult = nt.coreMult(sdat.cpuCores);
 				asd.homeCoreMult = nt.coreMult(sdat.cpuCores);
-				totRam += Math.max(0, (sdat.maxRam - sdat.ramUsed - nt.homeReserve) * asd.homeCoreMult);
+				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve) * asd.homeCoreMult);
 			}
 			else {
 				sdat.coreMult = nt.coreMult(sdat.cpuCores);
-				totRam += sdat.maxRam*1.0;
+				totRam += sdat.maxRam;
 				if (sdat.hasAdminRights && sdat.maxRam >= scriptRam) {
 					if (sdat.maxRam > smallRam) { rsd.push(sdat); }
 					else { sml.push(server); }
