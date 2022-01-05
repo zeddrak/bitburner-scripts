@@ -7,6 +7,7 @@ export async function main(ns) {
 	ns.disableLog('sleep');
 	ns.disableLog('getServerSecurityLevel');
 	ns.disableLog('getServerMoneyAvailable');
+	ns.clearLog();
 
 	while (true) {
 		await ns.sleep(1);

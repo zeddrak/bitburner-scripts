@@ -1,7 +1,21 @@
 /** @param {NS} ns **/
 
-export const sFiles = [2.0, '_weak.js', 1.75, '_hack.js', 1.70, '_grow.js', 1.75, 'fixem.js', 1.95];
+export const sFiles = [2.0, '_weak.js', 1.75, '_hack.js', 1.70, '_grow.js', 1.75, 'fixem.js', 1.95
+	, 'masterpserv.js', 11.35, 'masterdata.js', 4.45, 'masternuke.js', 4.6
+	, 'masterstrat.js', 2.9, 'masterspawn.js', 3.65, 'masterhacknet.js', 5.7];
 export const homeReserve = 100; //amt of ram to keep free at home
+
+//use any ns function without mem cost
+// to do so, hide the function name
+function func(functionName, context /*, args */) {
+  var args = Array.prototype.slice.call(arguments, 2);
+  var namespaces = functionName.split(".");
+  var func = namespaces.pop();
+  for(var i = 0; i < namespaces.length; i++) {
+    context = context[namespaces[i]];
+  }
+  return context[func].apply(context, args);
+}
 
 // other helper functions
 export function scriptRam(script = sFiles[1]) { return sFiles[sFiles.indexOf(script) + 1]; }
@@ -11,14 +25,14 @@ export function maxRam(server) {
 	try {
 		const di = Math.asd.servers.dat.indexOf(server) + 1;
 		if (di > 0) { return Math.asd.servers.dat[di].maxRam; }
-	} catch {}
+	} catch { }
 	return 0;
 }
 export function freeRam(server) {
 	try {
 		const di = Math.asd.servers.dat.indexOf(server) + 1;
 		if (di > 0) { return Math.max(0, Math.asd.servers.dat[di].freeRam); }
-	} catch {}
+	} catch { }
 	return 0;
 }
 export function eatRam(server, cost) {
@@ -82,26 +96,26 @@ export function hAnalyzeChance(server, player, difficulty = -1) {
 }
 
 // returns decimal percentage stolen by ONE hack thread
-export function hAnalyze(server, player, difficulty = -1, BitNodeMultipliersScriptHackMoney = 1) {
+export function hAnalyze(server, player, difficulty = -1) {
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
 	const balanceFactor = 240;
 
 	const difficultyMult = (100 - difficulty) / 100;
-	const skillMult = (player.hacking - (server.requiredHackingSkill - 1)) / player.hacking;
+	const skillMult = (player.hacking - (server.requiredHackingSkill - 1)) / player.hacking * (Math.asd.BitNodeMultipliers?(Math.asd.BitNodeMultipliers.ScriptHackMoney??1.0):1.0);
 	const percentMoneyHacked = (difficultyMult * skillMult * player.hacking_money_mult) / balanceFactor;
-	if (percentMoneyHacked < 0) { return 0; }
-	if (percentMoneyHacked > 1) { return 1; }
+	if (percentMoneyHacked < 0) { return 0.0; }
+	if (percentMoneyHacked > 1) { return 1.0; }
 
-	return percentMoneyHacked * BitNodeMultipliersScriptHackMoney;
+	return percentMoneyHacked;
 }
 
 // returns actual dollars stolen by ONE hack thread
 //useMax = true: gets value based on server's MaxMoney
 //useMax = false: gets value based on server's AvailableMoney
-export function hAnalyzeValue(server, player, difficulty = -1, BitNodeMultipliersScriptHackMoney = 1, useMax = true) {
-	const hAmt = hAnalyze(server, player, difficulty, BitNodeMultipliersScriptHackMoney);
+export function hAnalyzeValue(server, player, difficulty = -1, useMax = true) {
+	const hAmt = hAnalyze(server, player, difficulty);
 	const money = useMax ? server.moneyMax : server.moneyAvailable;
 	return hAmt * money;
 }
@@ -134,7 +148,7 @@ export function calculateIntelligenceMult(intelligence, weight = 1) {
 
 /*
 gAnalyze (and gAnalyzeLost) are reverse engineered from
-    function calculateServerGrowth(server: Server, threads: number, p: IPlayer, cores = 1): number
+	function calculateServerGrowth(server: Server, threads: number, p: IPlayer, cores = 1): number
 	(and related functions/constants)
 
 which grows a server with the following formula
@@ -155,7 +169,7 @@ Threads = log (GM / TM) / log (Base) // Log change of base rule (from log base "
 //capGrowMult false (default) = return threads for provided growth
 //capGrowMult true = return threads for provided growth OR needed for growth to max money on provided server
 //  whichever is less
-export function gAnalyze(server, player, growth, difficulty = -1, cores = 1, BitNodeMultipliersServerGrowthRate = 1, capGrowMult = false) {
+export function gAnalyze(server, player, growth, difficulty = -1, cores = 1, capGrowMult = false) {
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
@@ -169,15 +183,15 @@ export function gAnalyze(server, player, growth, difficulty = -1, cores = 1, Bit
 
 	const serverGrowthPercentage = server.serverGrowth / 100.0;
 	const coreMultiplier = coreMult(cores);
-	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * BitNodeMultipliersServerGrowthRate; //total of all grow thread multipliers
+	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * (Math.asd.BitNodeMultipliers?(Math.asd.BitNodeMultipliers.ServerGrowthRate??1):1); //total of all grow thread multipliers
 
 	const cycles = Math.log(growthMultiplier) / (Math.log(exponentialBase)) / threadMultiplier;
 	return cycles;
 }
 
-export function gAnalyzeLost(server, player, hackAmt, difficulty = -1.0, cores = 1, BitNodeMultipliersServerGrowthRate = 1, capGrowMult = false) {
-	const growth = 1 / (1 - hackAmt);
-	return gAnalyze(server, player, growth, difficulty, cores, BitNodeMultipliersServerGrowthRate, capGrowMult);
+export function gAnalyzeLost(server, player, hackAmt, difficulty = -1.0, cores = 1, capGrowMult = false) {
+	const growth = 1 / (1 - Math.min(0.9999,hackAmt));
+	return gAnalyze(server, player, growth, difficulty, cores, capGrowMult);
 }
 
 // === end formulas ===

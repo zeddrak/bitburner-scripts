@@ -77,8 +77,8 @@ function buildOthers(ns) {
 			//sdat.ls = this.ns.ls(server);
 			//sdat.ps = this.ns.ps(server);
 			//ToDo: add all process data?
-			sdat.freeRam = Math.max(0,sdat.maxRam - ns.getServerUsedRam(server)
-				- ((server == 'home') ? nt.homeReserve : 0));
+			sdat.freeRam = Math.max(0, sdat.maxRam - ns.getServerUsedRam(server)
+				- ((server == 'home') ? (Math.min((sdat.maxRam * 0.1), nt.homeReserve)) : 0));
 
 			if (server == 'home') {
 				smallRam = smlRam * sdat.maxRam;
@@ -143,7 +143,7 @@ export const homeReserve = 100; //amt of ram to keep free at home
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
-	asd=Math.asd; //if port's not empty, populate asd
+	asd = Math.asd; //if port's not empty, populate asd
 	if (!asd.servers) { asd.servers = {}; }
 	if (!asd.totRam) { asd.totRam = 0; }
 
@@ -163,13 +163,13 @@ export async function main(ns) {
 		buildOthers(ns);
 		// uncomment line below if desired (increases size by 5.00 GB)
 		//if (!(count % 5000)) { asd.sources = ns.getOwnedSourceFiles(); }
-		if (!(count % 50000) && asd.servers && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
+		if (loop && !(count % 50000) && asd.servers && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
 			if (Array.isArray(asd.sources) && asd.sources.includes('changeThis')) {
 				// uncomment lines below if desired (increases size by 2.00 GB)
 				// ns.tPrint('== Opening Backdoor on ' + asd.servers.bak[0]);
 				// ns.installBackdoor(asd.servers.bak[0]);
 			}
-			else { ns.tprint('== Backdoors needed on ' + asd.servers.bak); }
+			else { ns.tprint(('== Backdoors needed on ' + asd.servers.bak).replaceAll(',', ' ')); }
 		}
 		count++;
 		// this.ns.clearLog();
