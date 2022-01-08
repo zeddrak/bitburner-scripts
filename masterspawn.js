@@ -3,19 +3,17 @@ import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
 
 
-function freeRam(ns, server) {
+function freeRam(ns, server) { //uses getServerRam to ensure up to date values to avoid trying to generate threads w/o enough RAM
 	try {
-		return asd.servers.dat[asd.servers.dat.indexOf(server) + 1].maxRam
-			- ns.getServerUsedRam(server)
-			- ((server == 'home') ? nt.homeReserve : 0);
+		return nt.maxRam(server) - ns.getServerUsedRam(server) - Math.max(0, ((server == 'home') ? nt.homeReserve() : 0));
 	}
-	catch { return 0; }
+	catch { }
+	return 0;
 }
 
 function launchAttack(ns, type, tar, threads = 1) {
-	const sfi = (type == 'h') ? 3 : (type == 'g') ? 5 : 1; //default to w
-	const script = nt.sFiles[sfi];
-	const size = nt.sFiles[sfi + 1];
+	const script = (type == 'h') ? '_hack.js' : (type == 'g') ? '_grow.js' : '_weak.js'; //default to w
+	const size = nt.scriptCost(script);
 	for (let i = ((type == 'g') ? 0 : 1); i < ress.length && threads > 0; i++) { //sart at home for grows; largest non-home server for others.
 		const res = ress[i];
 		const maxth = Math.max(0, Math.floor(freeRam(ns, res) / size))
@@ -41,7 +39,7 @@ export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	asd.tixShort = asd.tixShort ?? false;
-	asd.tixLong = asd.tixShort ?? false;
+	asd.tixLong = asd.tixLong ?? false;
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
@@ -61,7 +59,7 @@ export async function main(ns) {
 		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam; i++) { //ToDo: add totProc check
 			await ns.sleep(1);
 
-			try { ress = asd.servers.res; } catch {}
+			try { ress = asd.servers.res; } catch { }
 
 			totCost += asd.bests[i].cost;
 			const tar = asd.bests[i].tar;
@@ -72,32 +70,33 @@ export async function main(ns) {
 			const wT = dat.wT; // length of a weaken
 
 			let wL = Date.now() + 100; // weaken launch time
-			let gL = wL + wT - gT - 2 * asd.bests[i].cL - 10; //grow launch time
-			let hL = gL + gT - hT + 4 * asd.bests[i].cL - 10; //hack launch time
+			let gL = wL + wT - gT + 5 * asd.bests[i].cL - 10; //grow launch time
+			let hL = gL + gT - hT + 5 * asd.bests[i].cL - 10; //hack launch time
 			let tL = Date.now(); //test server launch time
 
 			let curTar = asd.bests[i].tar;
 			while (asd.bests[i].tar == curTar) { //will need to be removed if multiple targets are to be enabld
 				await ns.sleep(0);
 
-				const hgSec = asd.bests[i].hS + asd.bests[i].gS 
-				const secTol = dat.minDifficulty + Math.max(1,hgSec); //don't allow sec to rise by more than 1
+				const hgSec = asd.bests[i].hS + asd.bests[i].gS
+				const secTol = dat.minDifficulty + Math.max(1, hgSec); //don't allow sec to rise by more than 1
 				const monTol = (1.0 - asd.bests[i].amt) * 0.90 * dat.moneyMax; //don't allow more than 1 hack to hit
 
 				const cL = asd.bests[i].cL;
 
+				//ToDo - make the queue less ineffecient
 				//clean up old hPids
-				if (hpids.length - asd.bests[i].hP > 2) {
-					hpids.slice(0, Math.max(0, hpids.length - asd.bests[i].hP - 2));
+				if (hpids.length - asd.bests[i].hP > 0) {
+					hpids.slice(0, Math.max(0, hpids.length - asd.bests[i].hP));
 				}
-				//collission detection (and prevention)
-				//ToDo: Figure out if there's a way to not kill hacks when waiting for grows and weakens to land
+				//collission detection (and prevention?)
 				if (Date.now() > tL && (((ns.getServerSecurityLevel(tar) - secTol) > 0) || ((ns.getServerMoneyAvailable(tar) - monTol) < 0))) {
-					for (let i = 0; i<3 && hpids.length > 1; i++){
-						while (hpids.length > 0 && !ns.kill(hpids.shift())) { await ns.sleep(0) } // kill until a hack is actually killed (or no hacks remain)
+					for (let j = 0; j < 5 && hpids.length > 1; j++) {
+						while (hpids.length > 0 && !ns.kill(hpids.shift())) { await ns.asleep(0) } // kill until a hack is actually killed (or no hacks remain)
 					}
 					tL = Date.now() + cL;
 				}
+
 				try { ress = asd.servers.res; } catch { continue; }
 				if (Date.now() > hL) {
 					launchAttack(ns, 'h', tar, asd.bests[i].hN);

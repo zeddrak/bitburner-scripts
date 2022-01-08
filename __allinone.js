@@ -77,53 +77,59 @@ let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
-	
+
 	try { asd.BitNodeMultipliers = ns.getBitNodeMultipliers(); }
 	catch {
 		const bnm = {
-			AgilityLevelMultiplier:1, // 	number 	Influences how quickly the player's agility level (not exp) scales
-			AugmentationMoneyCost:1, // 	number 	Influences the base cost to purchase an augmentation.
-			AugmentationRepCost:1, // 	number 	Influences the base rep the player must have with a faction to purchase an augmentation.
-			BladeburnerRank:1, // 	number 	Influences how quickly the player can gain rank within Bladeburner.
-			BladeburnerSkillCost:1, // 	number 	Influences the cost of skill levels from Bladeburner.
-			CharismaLevelMultiplier:1, // 	number 	Influences how quickly the player's charisma level (not exp) scales
-			ClassGymExpGain:1, // 	number 	Influences the experience gained for each ability when a player completes a class.
-			CodingContractMoney:1, // 	number 	Influences the amount of money gained from completing Coding Contracts
-			CompanyWorkExpGain:1, // 	number 	Influences the experience gained for each ability when the player completes working their job.
-			CompanyWorkMoney:1, // 	number 	Influences how much money the player earns when completing working their job.
-			CorporationValuation:1, // 	number 	Influences the valuation of corporations created by the player.
-			CrimeExpGain:1, // 	number 	Influences the base experience gained for each ability when the player commits a crime.
-			CrimeMoney:1, // 	number 	Influences the base money gained when the player commits a crime.
-			DaedalusAugsRequirement:1, // 	number 	Influences how many Augmentations you need in order to get invited to the Daedalus faction
-			DefenseLevelMultiplier:1, // 	number 	Influences how quickly the player's defense level (not exp) scales
-			DexterityLevelMultiplier:1, // 	number 	Influences how quickly the player's dexterity level (not exp) scales
-			FactionPassiveRepGain:1, // 	number 	Influences how much rep the player gains in each faction simply by being a member.
-			FactionWorkExpGain:1, // 	number 	Influences the experience gained for each ability when the player completes work for a Faction.
-			FactionWorkRepGain:1, // 	number 	Influences how much rep the player gains when performing work for a faction.
-			FourSigmaMarketDataApiCost:1, // 	number 	Influences how much it costs to unlock the stock market's 4S Market Data API
-			FourSigmaMarketDataCost:1, // 	number 	Influences how much it costs to unlock the stock market's 4S Market Data (NOT API)
-			HackExpGain:1, // 	number 	Influences the experienced gained when hacking a server.
-			HackingLevelMultiplier:1, // 	number 	Influences how quickly the player's hacking level (not experience) scales
-			HacknetNodeMoney:1, // 	number 	Influences how much money is produced by Hacknet Nodes and the hash rate of Hacknet Servers (unlocked in BitNode-9)
-			HomeComputerRamCost:1, // 	number 	Influences how much money it costs to upgrade your home computer's RAM
-			InfiltrationMoney:1, // 	number 	Influences how much money is gained when the player infiltrates a company.
-			InfiltrationRep:1, // 	number 	Influences how much rep the player can gain from factions when selling stolen documents and secrets
-			ManualHackMoney:1, // 	number 	Influences how much money can be stolen from a server when the player performs a hack against it through the Terminal.
-			PurchasedServerCost:1, // 	number 	Influence how much it costs to purchase a server
-			PurchasedServerLimit:1, // 	number 	Influences the maximum number of purchased servers you can have
-			PurchasedServerMaxRam:1, // 	number 	Influences the maximum allowed RAM for a purchased server
-			RepToDonateToFaction:1, // 	number 	Influences the minimum favor the player must have with a faction before they can donate to gain rep.
-			ScriptHackMoney:1, // 	number 	Influences how much money can be stolen from a server when a script performs a hack against it.
-			ServerGrowthRate:1, // 	number 	Influences the growth percentage per cycle against a server.
-			ServerMaxMoney:1, // 	number 	Influences the maxmimum money that a server can grow to.
-			ServerStartingMoney:1, // 	number 	Influences the initial money that a server starts with.
-			ServerStartingSecurity:1, // 	number 	Influences the initial security level (hackDifficulty) of a server.
-			ServerWeakenRate:1, // 	number 	Influences the weaken amount per invocation against a server.
-			StrengthLevelMultiplier:1, // 	number 	Influences how quickly the player's strength level (not exp) scales		
+			AgilityLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's agility level (not exp) scales
+			AugmentationMoneyCost: 1.0, // 	number 	Influences the base cost to purchase an augmentation.
+			AugmentationRepCost: 1.0, // 	number 	Influences the base rep the player must have with a faction to purchase an augmentation.
+			BladeburnerRank: 1.0, // 	number 	Influences how quickly the player can gain rank within Bladeburner.
+			BladeburnerSkillCost: 1.0, // 	number 	Influences the cost of skill levels from Bladeburner.
+			CharismaLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's charisma level (not exp) scales
+			ClassGymExpGain: 1.0, // 	number 	Influences the experience gained for each ability when a player completes a class.
+			CodingContractMoney: 1.0, // 	number 	Influences the amount of money gained from completing Coding Contracts
+			CompanyWorkExpGain: 1.0, // 	number 	Influences the experience gained for each ability when the player completes working their job.
+			CompanyWorkMoney: 1.0, // 	number 	Influences how much money the player earns when completing working their job.
+			CorporationValuation: 1.0, // 	number 	Influences the valuation of corporations created by the player.
+			CrimeExpGain: 1.0, // 	number 	Influences the base experience gained for each ability when the player commits a crime.
+			CrimeMoney: 1.0, // 	number 	Influences the base money gained when the player commits a crime.
+			DaedalusAugsRequirement: 1.0, // 	number 	Influences how many Augmentations you need in order to get invited to the Daedalus faction
+			DefenseLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's defense level (not exp) scales
+			DexterityLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's dexterity level (not exp) scales
+			FactionPassiveRepGain: 1.0, // 	number 	Influences how much rep the player gains in each faction simply by being a member.
+			FactionWorkExpGain: 1.0, // 	number 	Influences the experience gained for each ability when the player completes work for a Faction.
+			FactionWorkRepGain: 1.0, // 	number 	Influences how much rep the player gains when performing work for a faction.
+			FourSigmaMarketDataApiCost: 1.0, // 	number 	Influences how much it costs to unlock the stock market's 4S Market Data API
+			FourSigmaMarketDataCost: 1.0, // 	number 	Influences how much it costs to unlock the stock market's 4S Market Data (NOT API)
+			HackExpGain: 1.0, // 	number 	Influences the experienced gained when hacking a server.
+			HackingLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's hacking level (not experience) scales
+			HacknetNodeMoney: 1.0, // 	number 	Influences how much money is produced by Hacknet Nodes and the hash rate of Hacknet Servers (unlocked in BitNode-9)
+			HomeComputerRamCost: 1.0, // 	number 	Influences how much money it costs to upgrade your home computer's RAM
+			InfiltrationMoney: 1.0, // 	number 	Influences how much money is gained when the player infiltrates a company.
+			InfiltrationRep: 1.0, // 	number 	Influences how much rep the player can gain from factions when selling stolen documents and secrets
+			ManualHackMoney: 1.0, // 	number 	Influences how much money can be stolen from a server when the player performs a hack against it through the Terminal.
+			PurchasedServerCost: 1.0, // 	number 	Influence how much it costs to purchase a server
+			PurchasedServerLimit: 1.0, // 	number 	Influences the maximum number of purchased servers you can have
+			PurchasedServerMaxRam: 1.0, // 	number 	Influences the maximum allowed RAM for a purchased server
+			RepToDonateToFaction: 1.0, // 	number 	Influences the minimum favor the player must have with a faction before they can donate to gain rep.
+			ScriptHackMoney: 1.0, // 	number 	Influences how much money can be stolen from a server when a script performs a hack against it.
+			ServerGrowthRate: 1.0, // 	number 	Influences the growth percentage per cycle against a server.
+			ServerMaxMoney: 1.0, // 	number 	Influences the maxmimum money that a server can grow to.
+			ServerStartingMoney: 1.0, // 	number 	Influences the initial money that a server starts with.
+			ServerStartingSecurity: 1.0, // 	number 	Influences the initial security level (hackDifficulty) of a server.
+			ServerWeakenRate: 1.0, // 	number 	Influences the weaken amount per invocation against a server.
+			StrengthLevelMultiplier: 1.0, // 	number 	Influences how quickly the player's strength level (not exp) scales		
 		}
 		bnm = null;
 		asd.BitNodeMultipliers = bnm;
 	}
+}
+00_sourcefiles.js
+/** @param {NS} ns **/
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = {}; }
+	Math.asd.sources = ns.getOwnedSourceFiles();
 }
 fixem.js
 /** @param {NS} ns **/
@@ -155,24 +161,48 @@ export async function main(ns) {
 		count++;
 	}
 }
+masterbdoor.js
+/** @param {NS} ns **/
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
+	asd = Math.asd; //if port's not empty, populate asd
+
+	try {
+		if (ns.isBusy()) {
+			ns.installBackdoor(asd.servers.bak[0]);
+			ns.tPrint('== Opening Backdoor on ' + asd.servers.bak[0]);
+		}
+		asd.mbd = true; //master back door succeeded (or the player was already busy)
+	} catch { }
+}
 masterconfig.js
 /** @param {NS} ns **/
 //constants and helper functions for Drak's Masterhacker serries of scripts
 
-export const bestThresh = 1.10; //How much swapping targets has to be worth to bother
+export const HomeReserveMax = 100; //max amt of ram to keep free at home
+export const HomeReserveMin = 10; //min amt of ram to keep free at home
+export const HomeReservePortion = 0.10; //decimal% of home's ram to reserve, bounded by above
+// MasterScripts will generally attempt to reserve a HomeReservePortion of home's ram for processing scripts, bounced by the above
+
+export const SmlRam = 0.10; //portion of home ram below which a server is not used for the main hacking scripts
+
+export const NoticeInterval = 5 * 60 * 1000; //amount of time between notices (currently only backdoor notices)
+
+//export const bestThresh = 1.10; //How much swapping targets has to be worth to bother
 export const MaxAmt = 0.999; // max amount to steal per hack (decimal%) //lower helps maintain stability
-export const MaxProcess = 4000; //Maximum allowed concurrent processes
+export const MaxProcess = 8000; //Maximum allowed concurrent processes
 export const BN = 1.10; //buffer threads extra grow and weaken threads to help keep stability
 //const ProcPerbT = 10000; //how many processes before increasing bT
-export const MinbT = 20;//MINIMUM buffer time betwwen calls in milliseconds (time between each hack, grow, weaken, landing) to ensure sequence is kept
+export const MinbT = 23;//MINIMUM buffer time betwwen calls in milliseconds (time between each hack, grow, weaken, landing) to ensure sequence is kept
 // lower buffer = more hack grow pairs = more money (more effecient to a point)
 // but also means more chance of collissions and greater rounding error accumulation, which = reduced money
-export const RamUse = 0.99 // Amount of your total ram to allow profiles to build from
+export const RamUse = 0.95 // Amount of your total ram to allow profiles to build from
 export const MaxTargets = 1; //Maximum number of servers to atatck - currently only works for one, do not change
 
 
 /*
-// vestigual main
+// vestigial main
 export async function main(ns) {
 
 }
@@ -206,10 +236,8 @@ asd.servers.tar -- targets list - hack targets (rooted, have max$ > 0, & reqSkil
 //asd.servers.was -- targets list - weak a$$ servers (target servers that take less than 60 sec to weaken)
 ---------- some custom data ----------*/
 import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
 
-const scriptRam = 1.75; //hack is 1.7, but meh for now
-const smlRam = 0.1; //portion of home ram below which the server is not used for main hacking scripts
-//const wasTime = 60000; //target servers whose weaken time drop below this are considered WeakA$$Servers
 function serverGone(ns, server) { //version of server exists that also updates the lists, used like... if(serverGone(server)) {//abort...};
 	if (ns.serverExists(server)) { return false; } //if it exists, return false (not gone)
 
@@ -241,7 +269,7 @@ function buildAll(ns) {
 }
 
 function buildOthers(ns) {
-	if (count % 1000 == 0) { ns.print('--rebuilding OTHERS... (x1000)'); }
+	if (!count % 1000) { ns.print('--rebuilding OTHERS... (x1000)'); }
 	const servers = asd.servers.all;
 	let player = ns.getPlayer();
 	let smallRam = 0;
@@ -250,26 +278,26 @@ function buildOthers(ns) {
 	const dat = []; const pur = []; const non = [];
 	const hal = []; const rsd = []; const sml = [];
 	const bak = []; const tar = []; const was = [];
-	const hacklvl = asd.player.hacking;
+	const hacklvl = player.hacking;
 	for (const server of servers) {
 		if (!serverGone(ns, server)) {
 			const sdat = ns.getServer(server);
-			//sdat.ls = this.ns.ls(server);
-			//sdat.ps = this.ns.ps(server);
+//			sdat.LS = ns.ls(server);
+//			sdat.PS = ns.ps(server);
 			//ToDo: add all process data?
-			sdat.freeRam = Math.max(0, sdat.maxRam - ns.getServerUsedRam(server)
-				- ((server == 'home') ? (Math.min((sdat.maxRam * 0.1), nt.homeReserve)) : 0));
+			sdat.freeRam = Math.max(0, sdat.maxRam - sdat.ramUsed
+				- ((server == 'home') ? nt.homeReserve() : 0));
 
 			if (server == 'home') {
-				smallRam = smlRam * sdat.maxRam;
-				sdat.coreMult = nt.coreMult(sdat.cpuCores);
+				smallRam = mc.SmlRam * sdat.maxRam;
 				asd.homeCoreMult = nt.coreMult(sdat.cpuCores);
-				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve) * asd.homeCoreMult);
+				sdat.coreMult = asd.homeCoreMult;
+				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve()) * asd.homeCoreMult);
 			}
 			else {
 				sdat.coreMult = nt.coreMult(sdat.cpuCores);
 				totRam += sdat.maxRam;
-				if (sdat.hasAdminRights && sdat.maxRam >= scriptRam) {
+				if (sdat.hasAdminRights && sdat.maxRam >= 1.60) {
 					if (sdat.maxRam > smallRam) { rsd.push(sdat); }
 					else { sml.push(server); }
 				}
@@ -318,7 +346,6 @@ function buildOthers(ns) {
 //	asd = ns.getPortHandle(20).data; //if port's not empty, populate asd
 
 let count = 0;
-export const homeReserve = 100; //amt of ram to keep free at home
 
 let asd = {}; //all script data
 export async function main(ns) {
@@ -337,26 +364,32 @@ export async function main(ns) {
 
 	count = 0;
 	do {
-		asd.player = ns.getPlayer();
-		//		asd.sources = ns.getOwnedSourceFiles()
-		if (!(count % 1000)) { buildAll(ns); }
-		buildOthers(ns);
-		// uncomment line below if desired (increases size by 5.00 GB)
-		//if (!(count % 5000)) { asd.sources = ns.getOwnedSourceFiles(); }
-		if (loop && !(count % 50000) && asd.servers && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
-			if (Array.isArray(asd.sources) && asd.sources.includes('changeThis')) {
-				// uncomment lines below if desired (increases size by 2.00 GB)
-				// ns.tPrint('== Opening Backdoor on ' + asd.servers.bak[0]);
-				// ns.installBackdoor(asd.servers.bak[0]);
-			}
-			else { ns.tprint(('== Backdoors needed on ' + asd.servers.bak).replaceAll(',', ' ')); }
-		}
-		count++;
-		// this.ns.clearLog();
-		// this.ns.print(count);
 		await ns.sleep(1);
+		asd.player = ns.getPlayer(); //update player data continuously
+		if (!(count % 1000)) { buildAll(ns); } //rebuild all servers list every second or so
+		buildOthers(ns); // rebuild all server data and lists continuously
+		if (!(count % 1000)) { count = 0; } //prevent count from becoming a large int or some other js malarky
+		count++;
 	} while (loop);
 	ns.print('== datamaster complete ==');
+}
+masterfixem.js
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
+	asd = Math.asd; //if port's not empty, populate asd
+
+	//fill small servers with fixem scripts
+	var script = 'fixem.js';
+	var smls = []; try { smls = asd.servers.sml; } catch { return; }
+	for (const sml of smls) {
+		await ns.sleep(1);
+		if (nt.canRun(sml, script)) { ns.exec(script, sml, nt.maxThreads(sml, script)); }
+	}
 }
 masternuke.js
 /** @param {NS} ns **/
@@ -371,7 +404,7 @@ export async function main(ns) {
 	ns.disableLog('sleep');
 
 	ns.print("--Open Ports & Nuke 'em");
-	const servers = asd.servers.non??[];
+	const servers = asd.servers?asd.servers.non??[]:[];
 	for (const server of servers) {
 		if (!(server == 'home' || server.startsWith('pserv'))) {
 			const dat = ns.getServer(server);
@@ -385,12 +418,26 @@ export async function main(ns) {
 			if (!dat.hasAdminRights && dat.openPortCount >= dat.numOpenPortsRequired) {
 				ns.print('--NUKING ' + server);
 				await ns.nuke(server);
-				for (let i = 1; i<nt.sFiles.length; i+=2) {
-					await ns.scp(nt.sFiles[i],'home',server);
-				}
 			}
 		}
 	}
+}
+masterscripts.js
+/** @param {NS} ns **/
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
+	asd = Math.asd; //if port's not empty, populate asd
+	const scripts = [2.0]; // defaults to 2.0GB if script not found, may want to revise this...
+	for (const script of ns.ls("home",".js")) {
+		await ns.sleep(0);
+		const size = ns.getScriptRam(script,'home');
+		if (size) {
+			scripts.push(script);
+			scripts.push(size);
+		}
+	}
+	asd.hScripts = scripts;
 }
 masterspawn.js
 /** @param {NS} ns **/
@@ -398,20 +445,17 @@ import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
 
 
-function freeRam(ns, server) {
+function freeRam(ns, server) { //uses getServerRam to ensure up to date values to avoid trying to generate threads w/o enough RAM
 	try {
-		return asd.servers.dat[asd.servers.dat.indexOf(server) + 1].maxRam
-			- ns.getServerUsedRam(server)
-			- Math.max(0,((server == 'home') ?
-			Math.min(0.1*asd.servers.dat[asd.servers.dat.indexOf(server) + 1].maxRam,nt.homeReserve) : 0));
+		return nt.maxRam(server) - ns.getServerUsedRam(server) - Math.max(0, ((server == 'home') ? nt.homeReserve() : 0));
 	}
-	catch { return 0; }
+	catch { }
+	return 0;
 }
 
 function launchAttack(ns, type, tar, threads = 1) {
-	const sfi = (type == 'h') ? 3 : (type == 'g') ? 5 : 1; //default to w
-	const script = nt.sFiles[sfi];
-	const size = nt.sFiles[sfi + 1];
+	const script = (type == 'h') ? '_hack.js' : (type == 'g') ? '_grow.js' : '_weak.js'; //default to w
+	const size = nt.scriptCost(script);
 	for (let i = ((type == 'g') ? 0 : 1); i < ress.length && threads > 0; i++) { //sart at home for grows; largest non-home server for others.
 		const res = ress[i];
 		const maxth = Math.max(0, Math.floor(freeRam(ns, res) / size))
@@ -437,7 +481,7 @@ export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	asd.tixShort = asd.tixShort ?? false;
-	asd.tixLong = asd.tixShort ?? false;
+	asd.tixLong = asd.tixLong ?? false;
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
@@ -457,7 +501,7 @@ export async function main(ns) {
 		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam; i++) { //ToDo: add totProc check
 			await ns.sleep(1);
 
-			try { ress = asd.servers.res; } catch {}
+			try { ress = asd.servers.res; } catch { }
 
 			totCost += asd.bests[i].cost;
 			const tar = asd.bests[i].tar;
@@ -468,32 +512,33 @@ export async function main(ns) {
 			const wT = dat.wT; // length of a weaken
 
 			let wL = Date.now() + 100; // weaken launch time
-			let gL = wL + wT - gT - 2 * asd.bests[i].cL - 10; //grow launch time
-			let hL = gL + gT - hT + 4 * asd.bests[i].cL - 10; //hack launch time
+			let gL = wL + wT - gT + 5 * asd.bests[i].cL - 10; //grow launch time
+			let hL = gL + gT - hT + 5 * asd.bests[i].cL - 10; //hack launch time
 			let tL = Date.now(); //test server launch time
 
 			let curTar = asd.bests[i].tar;
 			while (asd.bests[i].tar == curTar) { //will need to be removed if multiple targets are to be enabld
 				await ns.sleep(0);
 
-				const hgSec = asd.bests[i].hS + asd.bests[i].gS 
-				const secTol = dat.minDifficulty + Math.max(1,hgSec); //don't allow sec to rise by more than 1
+				const hgSec = asd.bests[i].hS + asd.bests[i].gS
+				const secTol = dat.minDifficulty + Math.max(1, hgSec); //don't allow sec to rise by more than 1
 				const monTol = (1.0 - asd.bests[i].amt) * 0.90 * dat.moneyMax; //don't allow more than 1 hack to hit
 
 				const cL = asd.bests[i].cL;
 
+				//ToDo - make the queue less ineffecient
 				//clean up old hPids
-				if (hpids.length - asd.bests[i].hP > 2) {
-					hpids.slice(0, Math.max(0, hpids.length - asd.bests[i].hP - 2));
+				if (hpids.length - asd.bests[i].hP > 0) {
+					hpids.slice(0, Math.max(0, hpids.length - asd.bests[i].hP));
 				}
-				//collission detection (and prevention)
-				//ToDo: Figure out if there's a way to not kill hacks when waiting for grows and weakens to land
+				//collission detection (and prevention?)
 				if (Date.now() > tL && (((ns.getServerSecurityLevel(tar) - secTol) > 0) || ((ns.getServerMoneyAvailable(tar) - monTol) < 0))) {
-					for (let i = 0; i<5 && hpids.length > 1; i++){
-						while (hpids.length > 0 && !ns.kill(hpids.shift())) { await ns.sleep(0) } // kill until a hack is actually killed (or no hacks remain)
+					for (let j = 0; j < 5 && hpids.length > 1; j++) {
+						while (hpids.length > 0 && !ns.kill(hpids.shift())) { await ns.asleep(0) } // kill until a hack is actually killed (or no hacks remain)
 					}
 					tL = Date.now() + cL;
 				}
+
 				try { ress = asd.servers.res; } catch { continue; }
 				if (Date.now() > hL) {
 					launchAttack(ns, 'h', tar, asd.bests[i].hN);
@@ -548,11 +593,11 @@ import * as mc from "masterconfig.js";
 //  bT is a parameter in case you have other tasks that may require you to temporarily hack at a slower rate
 //    The global constant MinbT should be set instead for normal operation
 //  cores should be used to increase totRam and calculate actual launched threads at time of launch instead
-//    but is provided for here for sutuations where all or most processes get run on home - for instance
-function estBestScore(tar, hN, tardat = {}, bT = mc.MinbT, cores = 1) { //tar = target server: string, hN = number of hack threads to model: integer > 0
+//    but is provided for here for situations where all or most processes get run on home - for instance
+function estBestScore(tar, hN, tardat = null, bT = mc.MinbT, cores = 1) { //tar = target server: string, hN = number of hack threads to model: integer > 0
 	const ret = { tar: tar, value: 0, score: 0, cost: 0, hN: hN, bT: bT };
-	if (tardat == {}) try { tardat = asd.servers.dat[asd.servers.dat.indexof(tar) + 1]; } catch { return ret; }
-	if (tardat == {}) { return ret; } //can't get dat, abort
+	if (!tardat) try { tardat = nt.gServer(tar); } catch { return ret; }
+	if (!tardat) { return ret; } //can't get dat, abort
 
 	//determine hack amt, chamce, and thread count numbers for hack, etc. (hN, gN, wN)
 	ret.hA = tardat.hA; //hack Amount PER THREAD
@@ -579,25 +624,12 @@ function estBestScore(tar, hN, tardat = {}, bT = mc.MinbT, cores = 1) { //tar = 
 	ret.totP = ret.hP + ret.gP + ret.wP; //total number of processes to run this profile
 
 	//put it all together
-	ret.cost = nt.sFiles[4] * ret.hN * ret.hP + nt.sFiles[6] * ret.gN * ret.gP + nt.sFiles[2] * ret.wN * ret.wP; //cost in GB
+	ret.cost = nt.scriptCost('_hack.js') * ret.hN * ret.hP + nt.scriptCost('_grow.js') * ret.gN * ret.gP + nt.scriptCost('_weak.js') * ret.wN * ret.wP; //cost in GB
 	ret.value = ret.amt * tardat.moneyMax * ret.hC / ret.cL; // $ per millisecond
 	ret.score = ret.value / ret.cost; // $ / ms / GB
 	return ret;
 }
 
-async function fixem(ns) {
-	//fill small servers with fixem scripts
-	var script = nt.sFiles[7]; //fixem
-	var smls = []; try { smls = asd.servers.sml; } catch { return; }
-	for (const sml of smls) {
-		await ns.sleep(1);
-		if (nt.canRun(sml, script)) {
-			const th = nt.maxThreads(sml, script); //threads to assign to this attack
-			//var uid = Math.random();
-			ns.exec(script, sml, th);
-		}
-	}
-}
 
 let asd = {}; //all script data
 export async function main(ns) {
@@ -620,10 +652,6 @@ export async function main(ns) {
 
 	let count = 0;
 	do {
-		//copy scripts
-		ns.exec('sendem.js', 'home');
-		await fixem(ns);
-
 		await ns.sleep(50);
 		//update data
 		let tars = []; try { tars = asd.servers.tar; } catch { continue; }
@@ -671,53 +699,44 @@ export async function main(ns) {
 }
 notns.js
 /** @param {NS} ns **/
+import * as mc from "masterconfig.js";
 
-export const sFiles = [2.0, '_weak.js', 1.75, '_hack.js', 1.70, '_grow.js', 1.75, 'fixem.js', 1.95
-	, 'masterpserv.js', 11.35, 'masterdata.js', 4.45, 'masternuke.js', 4.6
-	, 'masterstrat.js', 2.9, 'masterspawn.js', 3.65, 'masterhacknet.js', 5.7];
-export const homeReserve = 100; //amt of ram to keep free at home
-
+// UNTESTED - USE CAREFULLY (might trigger static ram warning)
 //use any ns function without mem cost
-// to do so, hide the function name
-function func(functionName, context /*, args */) {
-  var args = Array.prototype.slice.call(arguments, 2);
-  var namespaces = functionName.split(".");
-  var func = namespaces.pop();
-  for(var i = 0; i < namespaces.length; i++) {
-    context = context[namespaces[i]];
-  }
-  return context[func].apply(context, args);
+// to do so, hide the function name (ex: 'get' + 'server', 'ns', 'home')
+function func(functionName, context, args = '') {
+	var args = Array.prototype.slice.call(arguments, 2);
+	var namespaces = functionName.split(".");
+	var func = namespaces.pop();
+	for (var i = 0; i < namespaces.length; i++) {
+		context = context[namespaces[i]];
+	}
+	return context[func].apply(context, args);
 }
 
 // other helper functions
-export function scriptRam(script = sFiles[1]) { return sFiles[sFiles.indexOf(script) + 1]; }
-export function canRun(server, script = sFiles[1]) { return freeRam(server) >= scriptRam(script); }
-export function maxThreads(server, script = sFiles[1]) { return Math.floor(freeRam(server) / scriptRam(script)); }
-export function maxRam(server) {
-	try {
+export function gServer(server) {
+	try{
 		const di = Math.asd.servers.dat.indexOf(server) + 1;
-		if (di > 0) { return Math.asd.servers.dat[di].maxRam; }
-	} catch { }
-	return 0;
+		if (di > 0) { return Math.asd.servers.dat[di]; }
+	} catch {}
+	return null;
 }
-export function freeRam(server) {
-	try {
-		const di = Math.asd.servers.dat.indexOf(server) + 1;
-		if (di > 0) { return Math.max(0, Math.asd.servers.dat[di].freeRam); }
-	} catch { }
-	return 0;
+export function scriptCost(script) { return Math.asd.hScripts[Math.asd.hScripts.indexOf(script) + 1]; }
+export function canRun(server, script) { return availRam(server) >= scriptCost(script); }
+export function maxThreads(server, script) { return Math.floor(availRam(server) / scriptCost(script)); }
+export function maxRam(server) { return gServer(server).maxRam??0; }
+export function availRam(server) { return gServer(server).freeRam??0; }
+export function homeReserve() { //amt of ram to keep free at home
+	try { return Math.min(mc.HomeReserveMax, Math.max(mc.HomeReserveMin, mc.HomeReservePortion * maxRam('home'))); }
+	catch { }
+	return 10;
 }
-export function eatRam(server, cost) {
-	try {
-		const di = Math.asd.servers.dat.indexOf(server) + 1;
-		if (di > 0) { Math.asd.servers.dat[di].freeRam -= cost; }
-	} catch { }
+export function eatRam(server, cost) { //to free up ram, eat a negative amount
+	try { gServer(server).freeRam -= cost; } catch { }
 }
 export function updateRam(server, amt) {
-	try {
-		const di = Math.asd.servers.dat.indexOf(server) + 1;
-		if (di > 0) { Math.asd.servers.dat[di].freeRam = amt; }
-	} catch { }
+	try { gServer(server).freeRam = amt; } catch { }
 }
 
 // === no cost formulas ===
@@ -726,7 +745,7 @@ export function updateRam(server, amt) {
 // ToDo
 export function gAnalyzeAmt() { }
 
-export function getHTime(server, player, difficulty = -1) { //target, server or server name
+export function getHTime(server, player = Math.asd.player, difficulty = -1) { //target, server or server name
 	if (difficulty <= 0) { difficulty = server.minDifficulty; }
 	const difficultyMult = server.requiredHackingSkill * difficulty;
 
@@ -741,17 +760,17 @@ export function getHTime(server, player, difficulty = -1) { //target, server or 
 	return hackingTime * 1000;
 }
 
-export function getGTime(target, player, difficulty = -1) {
+export function getGTime(target, player = Math.asd.player, difficulty = -1) {
 	const growTimeMultiplier = 3.2; // Relative to hacking time. 16/5 = 3.2
 	return growTimeMultiplier * getHTime(target, player, difficulty);
 }
 
-export function getWTime(target, player, difficulty = -1) {
+export function getWTime(target, player = Math.asd.player, difficulty = -1) {
 	const weakenTimeMultiplier = 4; // Relative to hacking time
 	return weakenTimeMultiplier * getHTime(target, player, difficulty);
 }
 
-export function hAnalyzeChance(server, player, difficulty = -1) {
+export function hAnalyzeChance(server, player = Math.asd.player, difficulty = -1) {
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
@@ -768,15 +787,17 @@ export function hAnalyzeChance(server, player, difficulty = -1) {
 }
 
 // returns decimal percentage stolen by ONE hack thread
-export function hAnalyze(server, player, difficulty = -1) {
+export function hAnalyze(server, player = Math.asd.player, difficulty = -1) {
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
 	const balanceFactor = 240;
 
 	const difficultyMult = (100 - difficulty) / 100;
-	const skillMult = (player.hacking - (server.requiredHackingSkill - 1)) / player.hacking * (Math.asd.BitNodeMultipliers?(Math.asd.BitNodeMultipliers.ScriptHackMoney??1.0):1.0);
-	const percentMoneyHacked = (difficultyMult * skillMult * player.hacking_money_mult) / balanceFactor;
+	const skillMult = (player.hacking - (server.requiredHackingSkill - 1)
+	)
+		/ player.hacking;
+	const percentMoneyHacked = (difficultyMult * skillMult * player.hacking_money_mult * ((Math.asd && Math.asd.BitNodeMultipliers) ? (Math.asd.BitNodeMultipliers.ScriptHackMoney ?? 1.0) : 1.0)) / balanceFactor;
 	if (percentMoneyHacked < 0) { return 0.0; }
 	if (percentMoneyHacked > 1) { return 1.0; }
 
@@ -786,7 +807,7 @@ export function hAnalyze(server, player, difficulty = -1) {
 // returns actual dollars stolen by ONE hack thread
 //useMax = true: gets value based on server's MaxMoney
 //useMax = false: gets value based on server's AvailableMoney
-export function hAnalyzeValue(server, player, difficulty = -1, useMax = true) {
+export function hAnalyzeValue(server, player = Math.asd.player, difficulty = -1, useMax = true) {
 	const hAmt = hAnalyze(server, player, difficulty);
 	const money = useMax ? server.moneyMax : server.moneyAvailable;
 	return hAmt * money;
@@ -841,7 +862,7 @@ Threads = log (GM / TM) / log (Base) // Log change of base rule (from log base "
 //capGrowMult false (default) = return threads for provided growth
 //capGrowMult true = return threads for provided growth OR needed for growth to max money on provided server
 //  whichever is less
-export function gAnalyze(server, player, growth, difficulty = -1, cores = 1, capGrowMult = false) {
+export function gAnalyze(server, player = Math.asd.player, growth, difficulty = -1, cores = 1, capGrowMult = false) {
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
@@ -855,14 +876,14 @@ export function gAnalyze(server, player, growth, difficulty = -1, cores = 1, cap
 
 	const serverGrowthPercentage = server.serverGrowth / 100.0;
 	const coreMultiplier = coreMult(cores);
-	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * (Math.asd.BitNodeMultipliers?(Math.asd.BitNodeMultipliers.ServerGrowthRate??1):1); //total of all grow thread multipliers
+	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.ServerGrowthRate ?? 1) : 1); //total of all grow thread multipliers
 
 	const cycles = Math.log(growthMultiplier) / (Math.log(exponentialBase)) / threadMultiplier;
 	return cycles;
 }
 
-export function gAnalyzeLost(server, player, hackAmt, difficulty = -1.0, cores = 1, capGrowMult = false) {
-	const growth = 1 / (1 - Math.min(0.9999,hackAmt));
+export function gAnalyzeLost(server, player = Math.asd.player, hackAmt, difficulty = -1.0, cores = 1, capGrowMult = false) {
+	const growth = 1 / (1 - Math.min(0.9999, hackAmt));
 	return gAnalyze(server, player, growth, difficulty, cores, capGrowMult);
 }
 
@@ -877,20 +898,21 @@ export async function main(ns) {
 */
 sendem.js
 /** @param {NS} ns **/
-const sFiles = ['_hack.js','_grow.js','_weak.js','fixem.js'];
+const sFiles = ['_hack.js', '_grow.js', '_weak.js', 'fixem.js'];
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
-	asd=Math.asd; //if port's not empty, populate asd
+	asd = Math.asd; //if port's not empty, populate asd
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
 
-	var tars = []; if (asd && asd.servers && Array.isArray(asd.servers.all)) {tars=asd.servers.all;}
-	for (var i=1;i<tars.length;i++) {
-		var tar = tars[i];
-		for (var j=0;j<sFiles.length;j++) {
-			await ns.scp(sFiles[j],'home',tar);
+	for (const tar of asd.servers ? asd.servers.all ?? [] : []) {
+		await ns.sleep(0);
+		if (tar == 'home') {continue;} //never copy files back to home!
+		for (const sFile of sFiles) {
+			await ns.sleep(0);
+			await ns.scp(sFile, 'home', tar);
 		}
 	}
 }

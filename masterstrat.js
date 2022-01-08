@@ -34,11 +34,11 @@ import * as mc from "masterconfig.js";
 //  bT is a parameter in case you have other tasks that may require you to temporarily hack at a slower rate
 //    The global constant MinbT should be set instead for normal operation
 //  cores should be used to increase totRam and calculate actual launched threads at time of launch instead
-//    but is provided for here for sutuations where all or most processes get run on home - for instance
-function estBestScore(tar, hN, tardat = {}, bT = mc.MinbT, cores = 1) { //tar = target server: string, hN = number of hack threads to model: integer > 0
+//    but is provided for here for situations where all or most processes get run on home - for instance
+function estBestScore(tar, hN, tardat = null, bT = mc.MinbT, cores = 1) { //tar = target server: string, hN = number of hack threads to model: integer > 0
 	const ret = { tar: tar, value: 0, score: 0, cost: 0, hN: hN, bT: bT };
-	if (tardat == {}) try { tardat = asd.servers.dat[asd.servers.dat.indexof(tar) + 1]; } catch { return ret; }
-	if (tardat == {}) { return ret; } //can't get dat, abort
+	if (!tardat) try { tardat = nt.gServer(tar); } catch { return ret; }
+	if (!tardat) { return ret; } //can't get dat, abort
 
 	//determine hack amt, chamce, and thread count numbers for hack, etc. (hN, gN, wN)
 	ret.hA = tardat.hA; //hack Amount PER THREAD
@@ -65,25 +65,12 @@ function estBestScore(tar, hN, tardat = {}, bT = mc.MinbT, cores = 1) { //tar = 
 	ret.totP = ret.hP + ret.gP + ret.wP; //total number of processes to run this profile
 
 	//put it all together
-	ret.cost = nt.sFiles[4] * ret.hN * ret.hP + nt.sFiles[6] * ret.gN * ret.gP + nt.sFiles[2] * ret.wN * ret.wP; //cost in GB
+	ret.cost = nt.scriptCost('_hack.js') * ret.hN * ret.hP + nt.scriptCost('_grow.js') * ret.gN * ret.gP + nt.scriptCost('_weak.js') * ret.wN * ret.wP; //cost in GB
 	ret.value = ret.amt * tardat.moneyMax * ret.hC / ret.cL; // $ per millisecond
 	ret.score = ret.value / ret.cost; // $ / ms / GB
 	return ret;
 }
 
-async function fixem(ns) {
-	//fill small servers with fixem scripts
-	var script = nt.sFiles[7]; //fixem
-	var smls = []; try { smls = asd.servers.sml; } catch { return; }
-	for (const sml of smls) {
-		await ns.sleep(1);
-		if (nt.canRun(sml, script)) {
-			const th = nt.maxThreads(sml, script); //threads to assign to this attack
-			//var uid = Math.random();
-			ns.exec(script, sml, th);
-		}
-	}
-}
 
 let asd = {}; //all script data
 export async function main(ns) {
@@ -106,10 +93,6 @@ export async function main(ns) {
 
 	let count = 0;
 	do {
-		//copy scripts
-		ns.exec('sendem.js', 'home');
-		await fixem(ns);
-
 		await ns.sleep(50);
 		//update data
 		let tars = []; try { tars = asd.servers.tar; } catch { continue; }

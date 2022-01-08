@@ -10,7 +10,7 @@ export async function main(ns) {
 	ns.disableLog('sleep');
 
 	ns.print("--Open Ports & Nuke 'em");
-	const servers = asd.servers.non??[];
+	const servers = asd.servers?asd.servers.non??[]:[];
 	for (const server of servers) {
 		if (!(server == 'home' || server.startsWith('pserv'))) {
 			const dat = ns.getServer(server);
@@ -24,9 +24,6 @@ export async function main(ns) {
 			if (!dat.hasAdminRights && dat.openPortCount >= dat.numOpenPortsRequired) {
 				ns.print('--NUKING ' + server);
 				await ns.nuke(server);
-				for (let i = 1; i<nt.sFiles.length; i+=2) {
-					await ns.scp(nt.sFiles[i],'home',server);
-				}
 			}
 		}
 	}

@@ -26,10 +26,8 @@ asd.servers.tar -- targets list - hack targets (rooted, have max$ > 0, & reqSkil
 //asd.servers.was -- targets list - weak a$$ servers (target servers that take less than 60 sec to weaken)
 ---------- some custom data ----------*/
 import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
 
-const scriptRam = 1.75; //hack is 1.7, but meh for now
-const smlRam = 0.1; //portion of home ram below which the server is not used for main hacking scripts
-//const wasTime = 60000; //target servers whose weaken time drop below this are considered WeakA$$Servers
 function serverGone(ns, server) { //version of server exists that also updates the lists, used like... if(serverGone(server)) {//abort...};
 	if (ns.serverExists(server)) { return false; } //if it exists, return false (not gone)
 
@@ -61,7 +59,7 @@ function buildAll(ns) {
 }
 
 function buildOthers(ns) {
-	if (count % 1000 == 0) { ns.print('--rebuilding OTHERS... (x1000)'); }
+	if (!count % 1000) { ns.print('--rebuilding OTHERS... (x1000)'); }
 	const servers = asd.servers.all;
 	let player = ns.getPlayer();
 	let smallRam = 0;
@@ -70,26 +68,26 @@ function buildOthers(ns) {
 	const dat = []; const pur = []; const non = [];
 	const hal = []; const rsd = []; const sml = [];
 	const bak = []; const tar = []; const was = [];
-	const hacklvl = asd.player.hacking;
+	const hacklvl = player.hacking;
 	for (const server of servers) {
 		if (!serverGone(ns, server)) {
 			const sdat = ns.getServer(server);
-			//sdat.ls = this.ns.ls(server);
-			//sdat.ps = this.ns.ps(server);
+//			sdat.LS = ns.ls(server);
+//			sdat.PS = ns.ps(server);
 			//ToDo: add all process data?
-			sdat.freeRam = Math.max(0, sdat.maxRam - ns.getServerUsedRam(server)
-				- ((server == 'home') ? (Math.min((sdat.maxRam * 0.1), nt.homeReserve)) : 0));
+			sdat.freeRam = Math.max(0, sdat.maxRam - sdat.ramUsed
+				- ((server == 'home') ? nt.homeReserve() : 0));
 
 			if (server == 'home') {
-				smallRam = smlRam * sdat.maxRam;
-				sdat.coreMult = nt.coreMult(sdat.cpuCores);
+				smallRam = mc.SmlRam * sdat.maxRam;
 				asd.homeCoreMult = nt.coreMult(sdat.cpuCores);
-				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve) * asd.homeCoreMult);
+				sdat.coreMult = asd.homeCoreMult;
+				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve()) * asd.homeCoreMult);
 			}
 			else {
 				sdat.coreMult = nt.coreMult(sdat.cpuCores);
 				totRam += sdat.maxRam;
-				if (sdat.hasAdminRights && sdat.maxRam >= scriptRam) {
+				if (sdat.hasAdminRights && sdat.maxRam >= 1.60) {
 					if (sdat.maxRam > smallRam) { rsd.push(sdat); }
 					else { sml.push(server); }
 				}
@@ -138,7 +136,6 @@ function buildOthers(ns) {
 //	asd = ns.getPortHandle(20).data; //if port's not empty, populate asd
 
 let count = 0;
-export const homeReserve = 100; //amt of ram to keep free at home
 
 let asd = {}; //all script data
 export async function main(ns) {
@@ -157,24 +154,12 @@ export async function main(ns) {
 
 	count = 0;
 	do {
-		asd.player = ns.getPlayer();
-		//		asd.sources = ns.getOwnedSourceFiles()
-		if (!(count % 1000)) { buildAll(ns); }
-		buildOthers(ns);
-		// uncomment line below if desired (increases size by 5.00 GB)
-		//if (!(count % 5000)) { asd.sources = ns.getOwnedSourceFiles(); }
-		if (loop && !(count % 50000) && asd.servers && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
-			if (Array.isArray(asd.sources) && asd.sources.includes('changeThis')) {
-				// uncomment lines below if desired (increases size by 2.00 GB)
-				// ns.tPrint('== Opening Backdoor on ' + asd.servers.bak[0]);
-				// ns.installBackdoor(asd.servers.bak[0]);
-			}
-			else { ns.tprint(('== Backdoors needed on ' + asd.servers.bak).replaceAll(',', ' ')); }
-		}
-		count++;
-		// this.ns.clearLog();
-		// this.ns.print(count);
 		await ns.sleep(1);
+		asd.player = ns.getPlayer(); //update player data continuously
+		if (!(count % 1000)) { buildAll(ns); } //rebuild all servers list every second or so
+		buildOthers(ns); // rebuild all server data and lists continuously
+		if (!(count % 1000)) { count = 0; } //prevent count from becoming a large int or some other js malarky
+		count++;
 	} while (loop);
 	ns.print('== datamaster complete ==');
 }
