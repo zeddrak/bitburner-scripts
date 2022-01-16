@@ -1,19 +1,20 @@
-00_getdoc.js
+00_getdoc.js  (26.60)
 /** @param {NS} ns **/
 //exploit to get and save a reference to the document object without incurring a RAM cost
 //run once at the beginning of your session, then use Math.doc for free ever after
 export async function main(ns) { try { Math.doc = document; } catch {} }
-00_getwin.js
+00_getwin.js  (26.60)
 /** @param {NS} ns **/
 //exploit to get and save a reference to the window object without incurring a RAM cost
 //run once at the beginning of your session, then use Math.win for free ever after
 export async function main(ns) { try { Math.win = window; } catch {} }
-00_sourcefiles.js
+00_sourcefiles.js  (7.10)
 /** @param {NS} ns **/
 
 //create a database of your earned source files and their level in a convenient array format
 // asd.sources[0] holds your current bitnode number, the rest hold your level with that sourcecode (source -1 is not recorded)
 // run once at the beginning of a bitnode run (or after starting the game client)
+let asd={};
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
 
@@ -25,7 +26,555 @@ export async function main(ns) {
 	asd.bitnode = bn;
 	asd.sources[0] = bn;
 }
-04_augments.js
+02_gangdata.js  (9.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	let loop = false;
+	if (ns.args.includes('loop')) { loop = true; }
+
+	try {
+		asd.gang = ns.gang.getGangInformation();
+		if (!nt.hasGang() && !ns.gang.createGang(mc.PreferedGangFaction)) { return; }
+		do {
+			while (ns.gang.recruitMember(Math.random())) { ns.sleep(1); }
+			asd.gang = ns.gang.getGangInformation();
+			asd.gang.members = ns.gang.getMemberNames();
+
+			const memberInfos = [];
+			for (const member of asd.gang.members) {
+				memberInfos.push(ns.gang.getMemberInformation(member));
+			}
+			asd.gang.memberInfos = memberInfos;
+			await ns.sleep(20);
+		} while (loop)
+	} catch { }
+}
+02_gangequip.js  (5.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+	const gang = asd.gang;
+
+	try {
+		for (const member of gang.members) {
+			for (const equip of nt.GangEquips) {
+				await ns.sleep(1);
+				ns.gang.purchaseEquipment(member, equip.name);
+			}
+		}
+	} catch {}
+}
+02_ganginit.js  (1.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	/*//code for populating notns arrays should they be changed
+	const SourceDats = [
+	{
+	  desc: "This gang member is currently idle",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Unassigned",
+	  params: { hackWeight: 100 }, // This is just to get by the weight check in the GangMemberTask constructor
+	},
+	{
+	  desc: "Assign this gang member to create and distribute ransomware<br><br>Earns money - Slightly increases respect - Slightly increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Ransomware",
+	  params: {
+		baseRespect: 0.00005,
+		baseWanted: 0.0001,
+		baseMoney: 3,
+		hackWeight: 100,
+		difficulty: 1,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to attempt phishing scams and attacks<br><br>Earns money - Slightly increases respect - Slightly increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Phishing",
+	  params: {
+		baseRespect: 0.00008,
+		baseWanted: 0.003,
+		baseMoney: 7.5,
+		hackWeight: 85,
+		chaWeight: 15,
+		difficulty: 3.5,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to attempt identity theft<br><br>Earns money - Increases respect - Increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Identity Theft",
+	  params: {
+		baseRespect: 0.0001,
+		baseWanted: 0.075,
+		baseMoney: 18,
+		hackWeight: 80,
+		chaWeight: 20,
+		difficulty: 5,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to carry out DDoS attacks<br><br>Increases respect - Increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "DDoS Attacks",
+	  params: {
+		baseRespect: 0.0004,
+		baseWanted: 0.2,
+		hackWeight: 100,
+		difficulty: 8,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to create and distribute malicious viruses<br><br>Increases respect - Increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Plant Virus",
+	  params: {
+		baseRespect: 0.0006,
+		baseWanted: 0.4,
+		hackWeight: 100,
+		difficulty: 12,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to commit financial fraud and digital counterfeiting<br><br>Earns money - Slightly increases respect - Slightly increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Fraud & Counterfeiting",
+	  params: {
+		baseRespect: 0.0004,
+		baseWanted: 0.3,
+		baseMoney: 45,
+		hackWeight: 80,
+		chaWeight: 20,
+		difficulty: 20,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to launder money<br><br>Earns money - Increases respect - Increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Money Laundering",
+	  params: {
+		baseRespect: 0.001,
+		baseWanted: 1.25,
+		baseMoney: 360,
+		hackWeight: 75,
+		chaWeight: 25,
+		difficulty: 25,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to commit acts of cyberterrorism<br><br>Greatly increases respect - Greatly increases wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Cyberterrorism",
+	  params: {
+		baseRespect: 0.01,
+		baseWanted: 6,
+		hackWeight: 80,
+		chaWeight: 20,
+		difficulty: 36,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to be an ethical hacker for corporations<br><br>Earns money - Lowers wanted level",
+	  isCombat: false,
+	  isHacking: true,
+	  name: "Ethical Hacking",
+	  params: {
+		baseWanted: -0.001,
+		baseMoney: 3,
+		hackWeight: 90,
+		chaWeight: 10,
+		difficulty: 1,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Mug People",
+	  params: {
+		baseRespect: 0.00005,
+		baseWanted: 0.00005,
+		baseMoney: 3.6,
+		strWeight: 25,
+		defWeight: 25,
+		dexWeight: 25,
+		agiWeight: 10,
+		chaWeight: 15,
+		difficulty: 1,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Deal Drugs",
+	  params: {
+		baseRespect: 0.00006,
+		baseWanted: 0.002,
+		baseMoney: 15,
+		agiWeight: 20,
+		dexWeight: 20,
+		chaWeight: 60,
+		difficulty: 3.5,
+		territory: {
+		  money: 1.2,
+		  respect: 1,
+		  wanted: 1.15,
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Strongarm Civilians",
+	  params: {
+		baseRespect: 0.00004,
+		baseWanted: 0.02,
+		baseMoney: 7.5,
+		hackWeight: 10,
+		strWeight: 25,
+		defWeight: 25,
+		dexWeight: 20,
+		agiWeight: 10,
+		chaWeight: 10,
+		difficulty: 5,
+		territory: {
+		  money: 1.6,
+		  respect: 1.1,
+		  wanted: 1.5,
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Run a Con",
+	  params: {
+		baseRespect: 0.00012,
+		baseWanted: 0.05,
+		baseMoney: 45,
+		strWeight: 5,
+		defWeight: 5,
+		agiWeight: 25,
+		dexWeight: 25,
+		chaWeight: 40,
+		difficulty: 14,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Armed Robbery",
+	  params: {
+		baseRespect: 0.00014,
+		baseWanted: 0.1,
+		baseMoney: 114,
+		hackWeight: 20,
+		strWeight: 15,
+		defWeight: 15,
+		agiWeight: 10,
+		dexWeight: 20,
+		chaWeight: 20,
+		difficulty: 20,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Traffick Illegal Arms",
+	  params: {
+		baseRespect: 0.0002,
+		baseWanted: 0.24,
+		baseMoney: 174,
+		hackWeight: 15,
+		strWeight: 20,
+		defWeight: 20,
+		dexWeight: 20,
+		chaWeight: 25,
+		difficulty: 32,
+		territory: {
+		  money: 1.4,
+		  respect: 1.3,
+		  wanted: 1.25,
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Threaten & Blackmail",
+	  params: {
+		baseRespect: 0.0002,
+		baseWanted: 0.125,
+		baseMoney: 72,
+		hackWeight: 25,
+		strWeight: 25,
+		dexWeight: 25,
+		chaWeight: 25,
+		difficulty: 28,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Human Trafficking",
+	  params: {
+		baseRespect: 0.004,
+		baseWanted: 1.25,
+		baseMoney: 360,
+		hackWeight: 30,
+		strWeight: 5,
+		defWeight: 5,
+		dexWeight: 30,
+		chaWeight: 30,
+		difficulty: 36,
+		territory: {
+		  money: 1.5,
+		  respect: 1.5,
+		  wanted: 1.6,
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory",
+	  isCombat: true,
+	  isHacking: false,
+	  name: "Terrorism",
+	  params: {
+		baseRespect: 0.01,
+		baseWanted: 6,
+		hackWeight: 20,
+		strWeight: 20,
+		defWeight: 20,
+		dexWeight: 20,
+		chaWeight: 20,
+		difficulty: 36,
+		territory: {
+		  money: 1,
+		  respect: 2,
+		  wanted: 2,
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Vigilante Justice",
+	  params: {
+		baseWanted: -0.001,
+		hackWeight: 20,
+		strWeight: 20,
+		defWeight: 20,
+		dexWeight: 20,
+		agiWeight: 20,
+		difficulty: 1,
+		territory: {
+		  money: 1,
+		  respect: 1,
+		  wanted: 0.9, // Gets harder with more territory
+		},
+	  },
+	},
+	{
+	  desc: "Assign this gang member to increase their combat stats (str, def, dex, agi)",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Train Combat",
+	  params: {
+		strWeight: 25,
+		defWeight: 25,
+		dexWeight: 25,
+		agiWeight: 25,
+		difficulty: 100,
+	  },
+	},
+	{
+	  desc: "Assign this gang member to train their hacking skills",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Train Hacking",
+	  params: { hackWeight: 100, difficulty: 45 },
+	},
+	{
+	  desc: "Assign this gang member to train their charisma",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Train Charisma",
+	  params: { chaWeight: 100, difficulty: 8 },
+	},
+	{
+	  desc: "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.",
+	  isCombat: true,
+	  isHacking: true,
+	  name: "Territory Warfare",
+	  params: {
+		hackWeight: 15,
+		strWeight: 20,
+		defWeight: 20,
+		dexWeight: 20,
+		agiWeight: 20,
+		chaWeight: 5,
+		difficulty: 5,
+	  },
+	},
+  ];
+  
+	let gangTasks = [];
+	let gangCTasks = [];
+	let gangHTasks = [];
+	let gangTaskInfo = [];
+	let gangCTaskInfo = [];
+	let gangHTaskInfo = [];
+  
+	for (const dat of SourceDats) {
+	  gangTasks.push(dat.name); gangTaskInfo.push(dat);
+	  if (dat.isCombat) {gangCTasks.push(dat.name);gangCTaskInfo.push(dat);}
+	  if (dat.isHacking) {gangHTasks.push(dat.name);gangHTaskInfo.push(dat);}
+	}
+	ns.print(gangTasks);
+	ns.print(gangCTasks);
+	ns.print(gangHTasks);
+	ns.print(gangTaskInfo);
+	ns.print(gangCTaskInfo);
+	ns.print(gangHTaskInfo);
+  
+	let gangEquipment = [];
+	for (const item of ns.gang.getEquipmentNames()) {
+	  let equip = {};
+	  equip.name = item;
+	  equip.type = ns.gang.getEquipmentType(item);
+	  equip.stats = ns.gang.getEquipmentStats(item);
+	  gangEquipment.push(equip);
+	}
+	ns.print(gangEquipment);
+	*/
+}
+02_gangtasks.js  (3.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+/*
+export const GangTasks = ["Unassigned","Mug People","Deal Drugs","Strongarm Civilians","Run a Con","Armed Robbery","Traffick Illegal Arms","Threaten & Blackmail","Human Trafficking","Terrorism","Vigilante Justice","Train Combat","Train Hacking","Train Charisma","Territory Warfare"];
+export const GangEquips = [{"name":"Baseball Bat","type":"Weapon","stats":{"str":1.04,"def":1.04}},{"name":"Katana","type":"Weapon","stats":{"str":1.08,"def":1.08,"dex":1.08}},{"name":"Glock 18C","type":"Weapon","stats":{"str":1.1,"def":1.1,"dex":1.1,"agi":1.1}},{"name":"P90C","type":"Weapon","stats":{"str":1.12,"def":1.1,"agi":1.1}},{"name":"Steyr AUG","type":"Weapon","stats":{"str":1.2,"def":1.15}},{"name":"AK-47","type":"Weapon","stats":{"str":1.25,"def":1.2}},{"name":"M15A10 Assault Rifle","type":"Weapon","stats":{"str":1.3,"def":1.25}},{"name":"AWM Sniper Rifle","type":"Weapon","stats":{"str":1.3,"dex":1.25,"agi":1.3}},{"name":"Bulletproof Vest","type":"Armor","stats":{"def":1.04}},{"name":"Full Body Armor","type":"Armor","stats":{"def":1.08}},{"name":"Liquid Body Armor","type":"Armor","stats":{"def":1.15,"agi":1.15}},{"name":"Graphene Plating Armor","type":"Armor","stats":{"def":1.2}},{"name":"Ford Flex V20","type":"Vehicle","stats":{"agi":1.04,"cha":1.04}},{"name":"ATX1070 Superbike","type":"Vehicle","stats":{"agi":1.08,"cha":1.08}},{"name":"Mercedes-Benz S9001","type":"Vehicle","stats":{"agi":1.12,"cha":1.12}},{"name":"White Ferrari","type":"Vehicle","stats":{"agi":1.16,"cha":1.16}},{"name":"NUKE Rootkit","type":"Rootkit","stats":{"hack":1.05}},{"name":"Soulstealer Rootkit","type":"Rootkit","stats":{"hack":1.1}},{"name":"Demon Rootkit","type":"Rootkit","stats":{"hack":1.15}},{"name":"Hmap Node","type":"Rootkit","stats":{"hack":1.12}},{"name":"Jack the Ripper","type":"Rootkit","stats":{"hack":1.15}},{"name":"Bionic Arms","type":"Augmentation","stats":{"str":1.3,"dex":1.3}},{"name":"Bionic Legs","type":"Augmentation","stats":{"agi":1.6}},{"name":"Bionic Spine","type":"Augmentation","stats":{"str":1.15,"def":1.15,"dex":1.15,"agi":1.15}},{"name":"BrachiBlades","type":"Augmentation","stats":{"str":1.4,"def":1.4}},{"name":"Nanofiber Weave","type":"Augmentation","stats":{"str":1.2,"def":1.2}},{"name":"Synthetic Heart","type":"Augmentation","stats":{"str":1.5,"agi":1.5}},{"name":"Synfibril Muscle","type":"Augmentation","stats":{"str":1.3,"def":1.3}},{"name":"BitWire","type":"Augmentation","stats":{"hack":1.05}},{"name":"Neuralstimulator","type":"Augmentation","stats":{"hack":1.15}},{"name":"DataJack","type":"Augmentation","stats":{"hack":1.1}},{"name":"Graphene Bone Lacings","type":"Augmentation","stats":{"str":1.7,"def":1.7}}];
+*/
+
+const powerInterval = 17 * 1000; //power updates every ~20 seconds
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	let powerTime = Date.now() + powerInterval;
+	while (true) {
+		const gang = asd.gang;
+		const gangRep = asd.factionReps[asd.factionReps.indexOf(gang.faction) + 1];
+		if (gang.territory < 1.0 && Date.now() > powerTime) { //asign to Teritory Power and await update
+			for (const member of gang.members) {
+				ns.gang.setMemberTask(member, 'Territory Warfare');
+			}
+			const oldPower = gang.power;
+			while (oldPower == asd.gang.power) { await ns.sleep(100); } //wait for power to update
+			powerTime = Date.now() + powerInterval;
+		}
+		let totalWanted = 0;
+		let minStats = Number.POSITIVE_INFINITY;
+		let minMember = '';
+		const jobs = [];
+		for (const member of gang.memberInfos) {
+			const totStats = nt.gangMemberTotalStats(member);
+			if (totStats < minStats) {
+				minStats = totStats;
+				minMember = member.name;
+			}
+			let maxRespect = 0;
+			let maxRTask = null;
+			for (const task of nt.GangCTaskInfo) {
+				let taskRespect = (gangRep > 2000000) ? nt.calcMoneyGain(member, task, gang) : nt.calcRespectGain(member, task, gang);
+				if (taskRespect - maxRespect > 0) {
+					maxRespect = taskRespect;
+					maxRTask = task;
+				}
+			}
+			const wantedAmt = nt.calcWantedLevelGain(member, maxRTask, gang);;
+			jobs.push(member.name);
+			jobs.push({ name: member.name, job: maxRTask.name, wanted: wantedAmt, taskInfo: maxRTask });
+			totalWanted += wantedAmt;
+			ns.gang.setMemberTask(member.name, maxRTask.name);
+		}
+		//assign weakest to train
+		ns.gang.setMemberTask(minMember, 'Train Combat');
+		totalWanted -= jobs[jobs.indexOf(minMember) + 1].wanted;
+
+		//assign Vigilante Justice
+		const justiceMembers = [];
+		while (totalWanted > 0) {
+			await ns.sleep(1);
+			let minJustice = Number.NEGATIVE_INFINITY;
+			let minJMember = '';
+			const justiceName = 'Vigilante Justice';
+			const justiceTask = nt.gangGetTask(justiceName);
+			for (const member of gang.memberInfos) {
+				if (minMember == member.name || justiceMembers.includes(member.name)) continue;
+				const justiceAmt = nt.calcWantedLevelGain(member, justiceTask, gang);
+				if (justiceAmt > minJustice) {
+					minJustice = justiceAmt;
+					minJMember = member.name;
+				}
+			}
+			if (minJMember == '') { break; }
+			justiceMembers.push(minJMember);
+			totalWanted -= jobs[jobs.indexOf(minJMember) + 1].wanted;
+			totalWanted += minJustice;
+			ns.gang.setMemberTask(minJMember, 'Vigilante Justice');
+			//TODO remove their wanted contribution
+		}
+		await ns.sleep(500);
+	}
+}
+02_gangwarfare.js  (3.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	if (asd.gang.territory >= 1.0) { ns.gang.setTerritoryWarfare(false); }
+}
+04_augments.js  (81.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -45,13 +594,14 @@ export async function main(ns) {
 
 	const showAll = ns.args.includes('all');
 
-	try {
+	//try {
 		let searchFactions = [];
 		for (const arg of ns.args) { if (nt.factionList.includes(arg)) { searchFactions.push(arg); } }
-		if (searchFactions == [] && asd.player) { searchFactions = asd.player.factions; }
+		if (searchFactions.length == 0 && asd.player) { searchFactions = asd.player.factions; }
 
 		let ownedAugs = [];
 		if (nt.hasSingularity()) { ownedAugs = ns.getOwnedAugmentations(true); }
+		else {ownedAugs = asd.ownedAugs; }
 
 		for (const aug of nt.gNeededAugmentations(ownedAugs)) {
 			await ns.sleep(0);
@@ -68,8 +618,8 @@ export async function main(ns) {
 				);
 			}
 		}
-	}
-	catch { };
+	//}
+	//catch { };
 
 	// generator for notns constant (in case the list ever changes)
 	/*
@@ -130,7 +680,7 @@ export async function main(ns) {
 	*/
 
 }
-04_bdoor.js
+04_bdoor.js  (65.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -148,13 +698,18 @@ export async function main(ns) {
 			await ns.sleep(1); //don't hang the game
 			ns.connect('home');
 			ns.tprint('== Opening Backdoor on ' + bak);
-			const paths = nt.connectPath(bak);
+			let paths = nt.connectPath(bak);
 			for (const path of paths) {
 				ns.connect(path); //connect to the target
 				await ns.sleep(1);
 			}
 			await ns.installBackdoor(); //install the backdoor
 			ns.connect('home');
+			paths = nt.connectPath(asd.bests[0].tar);
+			for (const path of paths) {
+				ns.connect(path); //connect to the target
+				await ns.sleep(1);
+			}
 		}
 		asd.noticeTime = Date.now() + mc.NoticeInterval; //update notice time
 	} catch { //output a list to the terminal every 5 minutes
@@ -164,7 +719,28 @@ export async function main(ns) {
 		}
 	}
 }
-04_crime.js
+04_buyall.js  (33.60)
+/** @param {NS} ns **/
+export async function main(ns) {
+	try {
+		ns.purchaseProgram('BruteSSH.exe');
+		ns.purchaseProgram('FTPCrack.exe');
+		ns.purchaseProgram('relaySMTP.exe');
+		ns.purchaseProgram('HTTPWorm.exe');
+		ns.purchaseProgram('SQLInject.exe');
+		//ns.purchaseProgram('ServerProfiler.exe');
+		//ns.purchaseProgram('Deepscanv1.exe');
+		//ns.purchaseProgram('Deepscanv2.exe');
+		//ns.purchaseProgram('Autolink.exe');
+		//ns.purchaseProgram('Formulas.exe');
+	} catch {}
+}
+04_buytor.js  (33.60)
+/** @param {NS} ns **/
+export async function main(ns) {
+	try {ns.purchaseTor();} catch {};
+}
+04_crime.js  (89.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -207,6 +783,7 @@ export async function main(ns) {
 	ns.clearLog();
 
 	let rounds = 30; //default to 30 crimes if no parameter is passed in
+	let crime = '';
 	if (ns.args.includes('Homicide') || ns.args.includes('kill')) { crime = 'Homocide'; }
 	if (parseInt(ns.args[0], 10) > 0) { rounds = parseInt(ns.args[0], 10); }
 
@@ -227,7 +804,45 @@ export async function main(ns) {
 		while (ns.isBusy()) { await ns.sleep(100); } //wait for crime to complete
 	}
 }
-04_homecpu.js
+04_factionrep.js  (17.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+	asd.factionReps = asd.factionReps??[0];
+
+	try {
+		const factionReps = [0]
+		for (const fac of asd.player.factions) {
+			factionReps.push(fac);
+			factionReps.push(ns.getFactionRep(fac));
+		}
+		asd.factionReps = factionReps;
+	} catch {}
+}
+04_factions.js  (81.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	ns.disableLog('sleep');
+	ns.disableLog('clearLog');
+	ns.clearLog();
+
+	let ownedAugs = [];
+	if (nt.hasSingularity()) { ownedAugs = ns.getOwnedAugmentations(true); }
+	else {ownedAugs = asd.ownedAugs; }
+
+	for (const fac of nt.gNeededFactions(ownedAugs)) { ns.print(fac); }
+}
+04_homecpu.js  (49.60)
 /** @param {NS} ns **/
 // attempts to upgrade your home server's CPU
 // run periodically to ensure your home computer stays upgaded
@@ -236,7 +851,7 @@ export async function main(ns) {
 	try { if (ns.upgradeHomeCores()) { ns.tprint('== upgraded home CPU =='); } }
 	catch { }
 }
-04_homeram.js
+04_homeram.js  (49.60)
 /** @param {NS} ns **/
 // attempts to upgrade your home server's RAM
 // run periodically to ensure your home computer stays upgaded
@@ -245,7 +860,7 @@ export async function main(ns) {
 	try { if (ns.upgradeHomeRam()) { ns.tprint('== upgraded home RAM =='); } }
 	catch { }
 }
-04_manualhack.js
+04_manualhack.js  (33.60)
 /** @param {NS} ns **/
 
 // just tries to manually hack whichever server you're currently conencted to (including home)
@@ -257,20 +872,16 @@ export async function main(ns) {
 	try { while (true) { await ns.sleep(0); await ns.manualHack(); } }
 	catch { }
 }
-04_ownedaugs.js
+04_ownedaugs.js  (81.60)
 /** @param {NS} ns **/
 
 // updates a list of your installed augments
 // run once at the beginning of a run
-// REQUIRES Singularity access (BN 4) to function
-
-let asd = {}; //all script data
+// REQUIRES Singularity access (BN 4) to function properly
 export async function main(ns) {
-	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
-
-	asd.ownedAugs = ns.getOwnedAugmentations(false);
+	try { Math.asd.ownedAugs = ns.getOwnedAugmentations(false); } catch { }
 }
-05_bitnode.js
+05_bitnode.js  (5.60)
 /** @param {NS} ns **/
 
 // updates all scripts data bitnode multipliers, to save RAM
@@ -284,62 +895,62 @@ export async function main(ns) {
 	try { asd.BitNodeMultipliers = ns.getBitNodeMultipliers(); }
 	catch {
 		const bnm = {
-			HackingLevelMultiplier:1,
-			StrengthLevelMultiplier:1,
-			DefenseLevelMultiplier:1,
-			DexterityLevelMultiplier:1,
-			AgilityLevelMultiplier:1,
-			CharismaLevelMultiplier:1,
-			ServerGrowthRate:1,
-			ServerMaxMoney:1,
-			ServerStartingMoney:1,
-			ServerStartingSecurity:1,
-			ServerWeakenRate:1,
-			HomeComputerRamCost:1,
-			PurchasedServerCost:1,
-			PurchasedServerSoftcap:1,
-			PurchasedServerLimit:1,
-			PurchasedServerMaxRam:1,
-			CompanyWorkMoney:1,
-			CrimeMoney:1,
-			HacknetNodeMoney:1,
-			ManualHackMoney:1,
-			ScriptHackMoney:1,
-			ScriptHackMoneyGain:1,
-			CodingContractMoney:1,
-			ClassGymExpGain:1,
-			CompanyWorkExpGain:1,
-			CrimeExpGain:1,
-			FactionWorkExpGain:1,
-			HackExpGain:1,
-			FactionPassiveRepGain:1,
-			FactionWorkRepGain:1,
-			RepToDonateToFaction:1,
-			AugmentationMoneyCost:1,
-			AugmentationRepCost:1,
-			InfiltrationMoney:1,
-			InfiltrationRep:1,
-			FourSigmaMarketDataCost:1,
-			FourSigmaMarketDataApiCost:1,
-			CorporationValuation:1,
-			CorporationSoftCap:1,
-			BladeburnerRank:1,
-			BladeburnerSkillCost:1,
-			GangSoftcap:1,
-			DaedalusAugsRequirement:1,
-			StaneksGiftPowerMultiplier:1,
-			StaneksGiftExtraSize:1,
-			WorldDaemonDifficulty:1
+			HackingLevelMultiplier: 1,
+			StrengthLevelMultiplier: 1,
+			DefenseLevelMultiplier: 1,
+			DexterityLevelMultiplier: 1,
+			AgilityLevelMultiplier: 1,
+			CharismaLevelMultiplier: 1,
+			ServerGrowthRate: 1,
+			ServerMaxMoney: 1,
+			ServerStartingMoney: 1,
+			ServerStartingSecurity: 1,
+			ServerWeakenRate: 1,
+			HomeComputerRamCost: 1,
+			PurchasedServerCost: 1,
+			PurchasedServerSoftcap: 1,
+			PurchasedServerLimit: 1,
+			PurchasedServerMaxRam: 1,
+			CompanyWorkMoney: 1,
+			CrimeMoney: 1,
+			HacknetNodeMoney: 1,
+			ManualHackMoney: 1,
+			ScriptHackMoney: 1,
+			ScriptHackMoneyGain: 1,
+			CodingContractMoney: 1,
+			ClassGymExpGain: 1,
+			CompanyWorkExpGain: 1,
+			CrimeExpGain: 1,
+			FactionWorkExpGain: 1,
+			HackExpGain: 1,
+			FactionPassiveRepGain: 1,
+			FactionWorkRepGain: 1,
+			RepToDonateToFaction: 1,
+			AugmentationMoneyCost: 1,
+			AugmentationRepCost: 1,
+			InfiltrationMoney: 1,
+			InfiltrationRep: 1,
+			FourSigmaMarketDataCost: 1,
+			FourSigmaMarketDataApiCost: 1,
+			CorporationValuation: 1,
+			CorporationSoftCap: 1,
+			BladeburnerRank: 1,
+			BladeburnerSkillCost: 1,
+			GangSoftcap: 1,
+			DaedalusAugsRequirement: 1,
+			StaneksGiftPowerMultiplier: 1,
+			StaneksGiftExtraSize: 0,
+			WorldDaemonDifficulty: 1
 		}
 		//bnm = null;
 		asd.BitNodeMultipliers = bnm;
 	}
 	ns.clearLog();
 	for (const pair in asd.BitNodeMultipliers) {
-		ns.print(pair +": "+ asd.BitNodeMultipliers[pair]);
+		ns.print(pair + ": " + asd.BitNodeMultipliers[pair]);
 	}
 }
-MSperWeaken.js
+MSperWeaken.js  (3.00)
 /** @param {NS} ns **/
 const sFiles = [2.0, '_weak.ns', 1.75, '_hack.ns', 1.70, '_grow.ns', 1.75, 'fixem.ns', 1.95];
 const homeReserve = 100; //amt of ram to keep free at home
@@ -412,7 +1023,7 @@ export async function main(ns) {
 		await ns.sleep(1);
 	}
 }
-_grow.js
+_grow.js  (1.75)
 /** @param {NS} ns **/
 
 // GROW slave script
@@ -424,7 +1035,7 @@ export async function main(ns) {
         } else { await ns.grow(ns.args[0]); }
     }
 }
-_hack.js
+_hack.js  (1.70)
 /** @param {NS} ns **/
 
 // HACK slave script
@@ -436,7 +1047,7 @@ export async function main(ns) {
         } else { await ns.hack(ns.args[0]); }
     }
 }
-_watchTargets.js
+_watchTargets.js  (1.80)
 /** @param {NS} ns **/
 
 //used to watch all scripts database target data
@@ -481,7 +1092,7 @@ export async function main(ns) {
 		}
 	}
 }
-_weak.js
+_weak.js  (1.75)
 /** @param {NS} ns **/
 
 // WEAKEN slave script
@@ -493,7 +1104,7 @@ export async function main(ns) {
         } else { await ns.weaken(ns.args[0]); }
     }
 }
-all41.js
+all41.js  (1.90)
 /** @param {NS} ns **/
 
 //used to create the allinone.txt file with all my scripts in it.
@@ -509,13 +1120,14 @@ export async function main(ns) {
 	for (const s of sList) {
 		await ns.sleep(0);
 		const dat = ns.read(s);
-		await ns.write(outFile, s, 'a');
+		const name = s + '  (' + ns.nFormat(ns.getScriptRam(s),'0.00') + ')';
+		await ns.write(outFile, name, 'a');
 		await ns.write(outFile, '\n', 'a');
 		await ns.write(outFile, dat, 'a');
 		await ns.write(outFile, '\n', 'a');
 	}
 }
-cctsolver.js
+cctsolver.js  (22.00)
 /** @param {NS} ns **/
 
 /* REFERENCE INFO
@@ -544,9 +1156,12 @@ function showCct(cct, server) {
 }
 
 function gatherCcts() {
-	ss.print('--searching all servers');
+	ss.tprint('--searching all servers');
 	const contracts = [];
-	for (const server of asd.servers.non) {
+	const servers = ['home'];
+	for (const server of servers) {
+		ss.asleep(1);
+		servers.push.apply(servers, (ss.scan(server).slice(server == 'home' ? 0 : 1))); //add the server's forward only children; home has no parent to skip
 		for (const cct of ss.ls(server, '.cct')) {
 			ss.asleep(1);
 			contracts.push(cct);
@@ -618,10 +1233,16 @@ async function solveCct(cct, server) {
 			break;
 
 	}
-	if (sol !== null && !ss.codingcontract.attempt(sol, cct, server, true)) {
-		ss.print('===== FAILED!! =====');
-		showCct(cct, server);
-		ss.print(sol);
+	if (sol !== null) {
+		const res = ss.codingcontract.attempt(sol, cct, server, true);
+		if (res = '') {
+			ss.tprint('===== FAILED!! =====');
+			ss.print('===== FAILED!! =====');
+			showCct(cct, server);
+			ss.print(sol);
+		} else {
+			ss.tprint(res);
+		}
 	}
 }
 
@@ -969,9 +1590,7 @@ function spiralMatrix(data) {
 }
 
 let ss; //global reference to ns for functions to use
-let asd = {}; //all script data
 export async function main(ns) {
-	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
 	ss = ns;
 
 	ns.disableLog('disableLog');
@@ -984,7 +1603,7 @@ export async function main(ns) {
 	showCcts(ccts);
 	solveCcts(ccts);
 }
-connect.js
+connect.js  (1.80)
 /** @param {NS} ns **/
 export async function main(ns) {
     let target = ns.args[0];
@@ -1015,7 +1634,7 @@ export async function main(ns) {
     terminalInput[handler].onChange({target:terminalInput});
     terminalInput[handler].onKeyDown({keyCode:13,preventDefault:()=>null});
 }
-doall.js
+doall.js  (3.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -1023,7 +1642,7 @@ import * as mc from "masterconfig.js";
 // master script - runs all the other scripts
 // run at the beginning of a run to make everything start happening automatically
 
-function sRunning(ns, script, server = 'home') { return ns.scriptRunning(script, server); }
+function scriptRunning(ns, script, server = 'home') { return ns.scriptRunning(script, server); }
 
 let asd = {}; //all script data
 export async function main(ns) {
@@ -1037,7 +1656,9 @@ export async function main(ns) {
 	ns.disableLog("getScriptRam");
 	ns.clearLog();
 
-	asd.noticeTime = asd.noticeTime??(Date.now() + mc.NoticeInterval);
+	asd.noticeTime = asd.noticeTime ?? (Date.now() + mc.NoticeInterval);
+	asd.ram = 4;
+	asd.gang = {};
 
 	try { ns.run('05_bitnode.js'); } catch { return; }
 	try { ns.run('00_sourcefiles.js'); } catch { return; }
@@ -1047,65 +1668,78 @@ export async function main(ns) {
 	await ns.sleep(50);
 	try { ns.run('karma.js'); } catch { }
 
-	if (!sRunning(ns, 'masterscripts.js')) { //gather home server's script data
-		ns.run('masterscripts.js');; while (sRunning(ns, 'masterscripts.js')) { await ns.asleep(50); }
+	if (!scriptRunning(ns, 'masterscripts.js')) { //gather home server's script data
+		ns.run('masterscripts.js');; while (scriptRunning(ns, 'masterscripts.js')) { await ns.asleep(50); }
 		await ns.sleep(100);
 	}
-	if (!sRunning(ns, 'masterdata.js')) {
-		ns.run('masterdata.js'); while (sRunning(ns, 'masterdata.js')) { await ns.asleep(50); }
+	if (!scriptRunning(ns, 'masterdata.js')) {
+		ns.run('masterdata.js'); while (scriptRunning(ns, 'masterdata.js')) { await ns.asleep(50); }
 		await ns.sleep(100);
 	}
-	if (!sRunning(ns, 'sendem.js')) {
+	if (!scriptRunning(ns, 'sendem.js')) {
 		ns.run('sendem.js'); await ns.sleep(100);
 	}
-	if (!sRunning(ns, 'masterstrat.js')) {
-		ns.run('masterstrat.js', 1, 'clear'); while (sRunning(ns, 'masterstrat.js')) { await ns.asleep(50); }
+	if (!scriptRunning(ns, 'masterstrat.js')) {
+		ns.run('masterstrat.js', 1, 'clear'); while (scriptRunning(ns, 'masterstrat.js')) { await ns.asleep(50); }
 		await ns.sleep(100);
 	}
 
 	while (true) {
 		await ns.sleep(500);
+		if (nt.hasSource(4) && !scriptRunning(ns, '04_buytor.js') && nt.canRun('home', '04_buytor.js', true)) {
+			ns.run('04_buytor.js');
+			await ns.sleep(100);
+		}
+		if (nt.hasSource(4) && !scriptRunning(ns, '04_buyall.js') && nt.canRun('home', '04_buyall.js', true)) {
+			ns.run('04_buyall.js');
+			await ns.sleep(100);
+		}
 		//4.60GB - upgrades home ram
-		if (nt.hasSource(4) && !sRunning(ns, '04_homeram.js') && nt.canRun('home', '04_homeram.js', true)) {
+		if (nt.hasSource(4) && !scriptRunning(ns, '04_homeram.js') && nt.canRun('home', '04_homeram.js', true)) {
 			ns.run('04_homeram.js');
 			await ns.sleep(100);
 		}
 		//4.60GB - upgrades home cpu
-		if (nt.hasSource(4) && !sRunning(ns, '04_homecpu.js') && nt.canRun('home', '04_homecpu.js', true)) {
+		if (nt.hasSource(4) && !scriptRunning(ns, '04_homecpu.js') && nt.canRun('home', '04_homecpu.js', true)) {
 			ns.run('04_homecpu.js');
 			await ns.sleep(100);
 		}
 		//1.90GB - updates the scripts and sizes on home
-		if (!sRunning(ns, 'masterscripts.js') && nt.canRun('home', 'masterscripts.js', true)) {
+		if (!scriptRunning(ns, 'masterscripts.js') && nt.canRun('home', 'masterscripts.js', true)) {
 			ns.run('masterscripts.js'); await ns.sleep(500);
 		}
 		//9.10GB - Manages player servers
-		if (!sRunning(ns, 'masterpserv.js') && nt.canRun('home', 'masterpserv.js', true)) {
+		if (!scriptRunning(ns, 'masterpserv.js') && nt.canRun('home', 'masterpserv.js', true)) {
 			ns.run('masterpserv.js'); await ns.sleep(500);
 		}
 		//4.40GB - Manages and updates all servers database
-		if (!sRunning(ns, 'masterdata.js') && nt.canRun('home', 'masterdata.js', true)) {
+		if (!scriptRunning(ns, 'masterdata.js') && nt.canRun('home', 'masterdata.js', true)) {
 			if (nt.homeReserve() > (16 + nt.scriptCost('masterdata.js'))) {
 				ns.run('masterdata.js', 1, 'loop');
 			}
-			else { ns.run('masterdata.js'); while (sRunning(ns, 'masterdata.js')) { await ns.sleep(100); } }
+			else { ns.run('masterdata.js'); while (scriptRunning(ns, 'masterdata.js')) { await ns.sleep(100); } }
 			await ns.sleep(500);
 		}
 		//2.20GB - sends scripts files to all servers
-		if (!sRunning(ns, 'sendem.js') && nt.canRun('home', 'sendem.js', true)) {
+		if (!scriptRunning(ns, 'sendem.js') && nt.canRun('home', 'sendem.js', true)) {
 			ns.run('sendem.js'); await ns.sleep(500);
 		}
+		//2.60GB - populates the factionRep list
+		if (nt.hasSource(4) && !scriptRunning(ns, '04_factionrep.js') && nt.canRun('home', '04_factionrep.js', true)) {
+			ns.run('04_factionrep.js');
+			await ns.sleep(100);
+		}
 		//2.90GB - fills small servers with fixem scripts
-		if (!sRunning(ns, 'masterfixem.js') && nt.canRun('home', 'masterfixem.js', true) && (asd.servers.sml.length > 0)) {
+		if (!scriptRunning(ns, 'masterfixem.js') && nt.canRun('home', 'masterfixem.js', true) && (asd.servers.sml.length > 0)) {
 			ns.run('masterfixem.js'); await ns.sleep(500);
 		}
 		//4.00GB - Opens ports and Nukes
-		if (!sRunning(ns, 'masternuke.js') && nt.canRun('home', 'masternuke.js', true) && !(asd.servers.non.length == asd.servers.hal.length)) {
+		if (!scriptRunning(ns, 'masternuke.js') && nt.canRun('home', 'masternuke.js', true) && !(asd.servers.non.length == asd.servers.hal.length)) {
 			ns.run('masternuke.js');
 			await ns.sleep(500);
 		}
 		//5.6GB - backdoors a system
-		if (!sRunning(ns, '04_bdoor.js') && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
+		if (!scriptRunning(ns, '04_bdoor.js') && Array.isArray(asd.servers.bak) && asd.servers.bak.length > 0) {
 			if (nt.hasSource(4) && nt.canRun('home', '04_bdoor.js', true)) {
 				ns.run('04_bdoor.js');
 				await ns.sleep(500);
@@ -1115,29 +1749,48 @@ export async function main(ns) {
 			}
 		}
 		//1.60GB - Analyzes and determines best targets
-		if (!sRunning(ns, 'masterstrat.js') && nt.canRun('home', 'masterstrat.js', true)) {
+		if (!scriptRunning(ns, 'masterstrat.js') && nt.canRun('home', 'masterstrat.js', true)) {
 			if (nt.homeReserve() > (16 + nt.scriptCost('masterdata.js') + nt.scriptCost('masterstrat.js'))
-				&& sRunning(ns, 'masterdata.js')) {
+				&& scriptRunning(ns, 'masterdata.js')) {
 				ns.run('masterstrat.js', 1, 'loop');
 			}
-			else { ns.run('masterstrat.js'); while (sRunning(ns, 'masterstrat.js')) { await ns.sleep(100); } }
+			else { ns.run('masterstrat.js'); while (scriptRunning(ns, 'masterstrat.js')) { await ns.sleep(100); } }
 			await ns.sleep(500);
 		}
 		//3.95GB - spawns attack scripts
-		if (!sRunning(ns, 'masterspawn.js') && nt.canRun('home', 'masterspawn.js', true)) {
+		if (!scriptRunning(ns, 'masterspawn.js') && nt.canRun('home', 'masterspawn.js', true)) {
 			ns.run('masterspawn.js'); await ns.sleep(500);
 		}
 		//5.7GB - buys and upgrades hacknet servers		
-		if (!sRunning(ns, 'masterhacknet.js') && nt.canRun('home', 'masterhacknet.js', true)) {
-			if (nt.availRam('home') > (32 + nt.scriptCost('masterhacknet.js')) && sRunning(ns, 'masterspawn.js')) {
+		if (!scriptRunning(ns, 'masterhacknet.js') && nt.canRun('home', 'masterhacknet.js', true)) {
+			if (nt.availRam('home') > (32 + nt.scriptCost('masterhacknet.js')) && scriptRunning(ns, 'masterspawn.js')) {
 				ns.run('masterhacknet.js', 1, 'loop');
 			}
 			else { ns.run('masterhacknet.js'); await ns.sleep(500); }
 			await ns.sleep(500);
 		}
+		//8.60GB - gathers gang related data to asd.gang
+		if (!scriptRunning(ns, '02_gangdata.js') && nt.canRun('home', '02_gangdata.js', true)) {
+			if (nt.availRam('home') > (32 + nt.scriptCost('02_gangdata.js')) && scriptRunning(ns, 'masterhacknet.js')) {
+				ns.run('02_gangdata.js', 1, 'loop');
+			}
+			ns.run('02_gangdata.js'); await ns.sleep(500);
+		}
+		//5.60GB - equips gang members
+		if (!scriptRunning(ns, '02_gangequip.js') && nt.canRun('home', '02_gangequip.js', true)) {
+			ns.run('02_gangequip.js'); await ns.sleep(500);
+		}
+		//3.60GB - manages gang member tasks
+		if (!scriptRunning(ns, '02_gangtasks.js') && nt.canRun('home', '02_gangtasks.js', true)) {
+			ns.run('02_gangtasks.js'); await ns.sleep(500);
+		}
+		//3.60GB - manages gang warfate
+		if (!scriptRunning(ns, '02_gangwarfare.js') && nt.canRun('home', '02_gangwarfare.js', true)) {
+			ns.run('02_gangwarfare.js'); await ns.sleep(500);
+		}
 	}
 }
-evalhackmodes.js
+evalhackmodes.js  (2.90)
 /** @param {NS} ns **/
 // !!! NOT CURRENT !!! - kept for reference
 
@@ -1370,7 +2023,7 @@ export async function main(ns) {
 	//	ns.print('== MasterStrat complete ==');
 
 }
-exploits.js
+exploits.js  (1.60)
 /** @param {NS} ns **/
 export async function main(ns) {
 	//ns.exploit();
@@ -1384,7 +2037,7 @@ export async function main(ns) {
 	//Math.doc.getElementById('unclickable').click();
 	//ns.alterReality();
 }
-fixem.js
+fixem.js  (2.00)
 /** @param {NS} ns **/
 
 // fixem finds and then weakens or grows suboptimal targets to better prep future hackmaster targets
@@ -1421,7 +2074,7 @@ export async function main(ns) {
 		}
 	}
 }
-getlit.js
+getlit.js  (2.50)
 /** @param {NS} ns **/
 
 //copies any .lit or .msg files in the network to your home server
@@ -1448,7 +2101,7 @@ export async function main(ns) {
 		}
 	}
 }
-infiltrate.js
+infiltrate.js  (1.60)
 /** @param {NS} ns **/
 
 //NOT YET FUNCTIONAL!
@@ -1486,7 +2139,7 @@ export async function main(ns) {
     infiltrateButton.click();
     await ns.sleep(100);
 }
-ka.js
+ka.js  (2.10)
 /** @param {NS} ns **/
 
 //kills all scripts not running on the home server
@@ -1501,7 +2154,7 @@ export async function main(ns) {
 	}
 	ns.tprint('--KillAllAll Complete');
 }
-karma.js
+karma.js  (1.70)
 /** @param {NS} ns **/
 
 //displays (and updates) the extra readout data
@@ -1526,6 +2179,7 @@ export async function main(ns) {
 				+ '<br/> Sec'
 				+ '<br/> Money'
 				+ '<br/> Ram'
+				+ '<br/> RealbT'
 				;
 			Math.doc.getElementById('overview-extra-hook-0').innerHTML = info0;
 		} catch { }
@@ -1543,40 +2197,61 @@ export async function main(ns) {
 				+ '<br/>' + ns.nFormat(dat.minDifficulty, '0') + ' ' + ns.nFormat(secdiff, '+0')
 				+ '<br/>' + ns.nFormat(moneylvl, '%')
 				+ '<br/>' + ns.nFormat(best.cost / asd.totRam, '0%')
+				+ '<br/>' + ns.nFormat(asd.realbT, '0.000');
 				;
 			Math.doc.getElementById('overview-extra-hook-1').innerHTML = info1;
 		} catch { }
 	}
 }
-mastercalibrate.js
+mastercalibrate.js  (1.60)
 /** @param {NS} ns **/
 export async function main(ns) {
 
 }
-masterconfig.js
+masterconfig.js  (1.60)
 /** @param {NS} ns **/
 //configuration constants for Drak's Masterhacker serries of scripts
-
 export const HomeReserveMax = 100; //max amt of ram to keep free at home
 export const HomeReserveMin = 10; //min amt of ram to keep free at home
 export const HomeReservePortion = 0.10; //decimal% of home's ram to reserve, bounded by above
 // MasterScripts will generally attempt to reserve a HomeReservePortion of home's ram for processing scripts, bounced by the above
 
 export const SmlRam = 0.10; //portion of home ram below which a server is not used for the main hacking scripts
-
 export const NoticeInterval = 5 * 60 * 1000; //amount of time between notices (currently only backdoor notices)
 
-//export const bestThresh = 1.10; //How much swapping targets has to be worth to bother
-export const MaxAmt = 0.90; // max amount to steal per hack (decimal%) //lower helps maintain stability
-//export const MaxProcess = 100000; //Maximum allowed concurrent processes
+export const BestThresh = 1.10; //How much better a new target has to be before swapping (to reduce profit loss to overfrequent target swapping)
+// ^NOT YET IMPLEMENTED
+export const MaxAmt = 0.99; // max amount to steal per hack (decimal%) - can generally leave this alone, can raise to 1.0 if desired for stocks or the like
+export const MaxProcess = 8000; //Maximum allowed concurrent processes - raising this is like a game of chicken with a cliff...
+// as long as it's low enough, everything's fine... Raise it a little too much though and your game will become unstabe, take longer to recover after autosaves, and just generally make lag spikes worse - MUCH worse
+// Try to find a level that doesn't tax your game too much, but also doesn't completely nerf your income.
+// Recommended ranges are 4000-10000; but is heavily hardware and environment dependant, so feel free to go outside these ranges as long as things feel comfortable for you
 export const BN = 1.10; //buffer threads extra grow and weaken threads to help keep stability
-//const ProcPerbT = 10000; //how many processes before increasing bT
-export const MincL = 60;//MINIMUM cycle Length (time between hgw landings) in milliseconds
-// lower cL = more hack grow pairs = more money (more effecient to a point)
+export const MinbT = 6; //MINIMUM bufferTime (time between each attack - like h bT g bT w) in milliseconds;
+// lower MinbT means that attacks will try to land closer together, which leaves more room in the cycle for low security launches which keeps the order more stable
+// but too low and the engine's randomnesss makes them land out of order - resulting in more aborted hacks and reducing profit
+// Raise MinbT (and mincL as appropriate) and or lower MaxProcess if you're getting too many collissions and losing alot of profit to killed hacks
+// Recommended range is 6-10, higher is perfectly fine if desired but can reduce profits during later installs, below 6 is pushing the limits of JavaScript itself and mot recommended
+export const MincL = 12;//MINIMUM cycle Length (time between the START of complete hgw cycles, or time between hacks) in milliseconds - at least 2x MinbT, make longer for a generally more stable game and rotation
+// lower cL = more hacks per second (more effecient to a point)
 // but also means more chance of collissions and greater rounding error accumulation, which = reduced money
 // try to find the sweat spot for your computer and environment
 export const RamUse = 0.90 // Amount of your total ram to allow profiles to build from, actual usage will vary
+// don't just set this to 100%, as processes launched during high sec stick around a little longer;
+// so using all your memory can make it impossible to launch new attacks on time which can be more disruptive than just not launching them in the first place
+export const AdaptSpeed = 0.0001; //How quickly the "realbT" adjusts to current lag spikes. Accceptable range is (0-1].
+// Has no impact on actual rotation or attacks, just the callibration tracker display.
+// Set higher to make the realbT "average" across less attacks and get a more "instantaneous" look at the current attack launch timers,
+// set lower to get a longer "rolling average" and smooth out the peaks and valleys.
+// GENERALLY the occassional lag spike has very little lasting impact on the rotation, and so instant isn't all that useful to track
+// but set this too low and it becomes impossible to see spikes at all, and you might not set MinbT high enough
 export const MaxTargets = 1; //Maximum number of servers to atatck - currently only works for one, do not change
+// ^ NOT YET IMPLEMENTED
+
+//==========
+//== Gang ==
+//==========
+export const PreferedGangFaction = 'Slum Snakes'; 
 
 /*
 // vestigial main
@@ -1584,7 +2259,7 @@ export async function main(ns) {
 
 }
 */
-masterdata.js
+masterdata.js  (4.40)
 /** @param {NS} ns **/
 /*=====
 Updates server and player data to the all scripts database
@@ -1757,7 +2432,7 @@ export async function main(ns) {
 	} while (loop);
 	ns.print('== datamaster complete ==');
 }
-masterfixem.js
+masterfixem.js  (2.90)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -1789,7 +2464,7 @@ export async function main(ns) {
 		if (th > 0) { ns.exec(script, sml, th, th, Math.random()); }
 	}
 }
-masterhacknet.js
+masterhacknet.js  (5.70)
 /** @param {NS} ns **/
 export async function main(ns) {
 	const Invest = 0.01; //decimal percentage of money to invest in hacknet
@@ -1830,7 +2505,7 @@ export async function main(ns) {
 	} while (loop);
 	ns.print('== Master Hacknet Complete ==');
 }
-masternuke.js
+masternuke.js  (4.00)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 
@@ -1865,7 +2540,7 @@ export async function main(ns) {
 		}
 	}
 }
-masterpserv.js
+masterpserv.js  (8.10)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -1877,7 +2552,7 @@ function myMoney(ns) { return ns.getServerMoneyAvailable('home'); }
 function canBuy(ns, ramPow) { return myMoney(ns) - ns.getPurchasedServerCost(realRam(ramPow)) > 0; }
 
 export async function main(ns) {
-	let asd = Math.asd; //if port's not empty, populate asd
+	let asd = Math.asd;
 	if (!asd) { return; }
 	if (!asd.deadserver) { asd.deadserver = ' '; }
 
@@ -1938,7 +2613,7 @@ export async function main(ns) {
 		}
 	}
 }
-masterscripts.js
+masterscripts.js  (1.90)
 /** @param {NS} ns **/
 
 /*==================
@@ -1980,7 +2655,7 @@ export async function main(ns) {
 	}
 	asd.hScripts = scripts;
 }
-masterspawn.js
+masterspawn.js  (3.65)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -1989,12 +2664,12 @@ import * as mc from "masterconfig.js";
 function freeRam(ns, server) { //uses getServerRam to ensure up to date values to avoid trying to generate threads w/o enough RAM
 	try {
 		return nt.maxRam(server) - ns.getServerUsedRam(server) - Math.max(0, ((server == 'home') ? nt.homeReserve() : 0));
-	}
-	catch { }
+	} catch { }
 	return 0;
 }
 
 function launchAttack(ns, type, tar, threads = 1) {
+	const start = Date.now();
 	const script = (type == 'h') ? '_hack.js' : (type == 'g') ? '_grow.js' : '_weak.js'; //default to w
 	const size = nt.scriptCost(script);
 	for (let i = ((type == 'g') ? 0 : 1); i < ress.length && threads > 0; i++) { //sart at home for grows; largest non-home server for others.
@@ -2009,10 +2684,15 @@ function launchAttack(ns, type, tar, threads = 1) {
 			if (pid > 0) {
 				threads -= Math.floor(th * coreMult);
 				if (type == 'h') { hpids.push(pid); }
-				//				hgw = true;
 			}
 		}
 	}
+	updatebT(start);
+}
+
+function updatebT(start) {
+	realbT += Math.min(mc.AdaptSpeed*realbT, Math.max(-mc.AdaptSpeed*realbT, ((Date.now() - start) - realbT) * mc.AdaptSpeed)); //update the rolling average
+	asd.realbT = realbT; //Math.max(mc.MinbT, Math.ceil(realbT)); //update the strat target
 }
 /*
 function thiscL(ns, pid, cL) { //retuns true if pid will complete within one CycleLength
@@ -2035,15 +2715,19 @@ let ress = [];
 let hpids = [];
 //let gpids = [];
 //let hgw = false;
+let realbT = mc.MinbT;
 
+let ss;
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	asd.tixShort = asd.tixShort ?? false;
 	asd.tixLong = asd.tixLong ?? false;
-	//	asd.realcL = asd.realcL ?? (2 * mc.MincL);
-	//	let realcL = asd.realcL;
+	asd.realbT = asd.realbT??(2 * mc.MinbT);
+	realbT = asd.realbT;
+
+	ss=ns;
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
@@ -2060,8 +2744,8 @@ export async function main(ns) {
 		await ns.sleep(0);
 
 		let totCost = 0; //add to this each time an active profile is added; up to totRam
-		//		let totProc = 0; //add to this each time an active profile is added; up to MaxProcess
-		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam; i++) { //ToDo: add totProc check
+		let totProc = 0; //add to this each time an active profile is added; up to MaxProcess
+		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam && totProc < mc.MaxProcess; i++) { //ToDo: add totProc check
 			await ns.sleep(1);
 
 			try { ress = asd.servers.res; } catch { }
@@ -2077,8 +2761,8 @@ export async function main(ns) {
 			let wL = Date.now() + 10; // weaken launch time
 			//let gL = wL - 5; //grow launch time
 			//let hL = gL - 5; //hack launch time
-			let gL = wL + wT - gT + 5 * asd.bests[i].cL - 5; //grow launch time
-			let hL = gL + gT - hT + 5 * asd.bests[i].cL - 5; //hack launch time
+			let gL = wL + wT - gT + 5 * asd.bests[i].cL - realbT; //grow launch time
+			let hL = gL + gT - hT + 5 * asd.bests[i].cL - realbT; //hack launch time
 			let tL = Date.now(); //test collision launch time
 
 			let curTar = asd.bests[i].tar;
@@ -2086,6 +2770,15 @@ export async function main(ns) {
 			//			let start = Date.now();
 
 			while (asd.bests[i].tar == curTar) { //will need to be removed if multiple targets are to be enabld
+				if (asd.calibrate) {
+					ns.disableLog('exec');
+					ns.disableLog('kill');
+					ns.print(realbT);
+				}
+				else {
+					ns.enableLog('exec');
+					ns.enableLog('kill');
+				}
 				await ns.sleep(0);
 
 				//				if (!hgw) { start = Date.now(); }
@@ -2144,7 +2837,7 @@ export async function main(ns) {
 		}
 	}
 }
-masterspawnbak.js
+masterspawnbak.js  (3.95)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -2275,7 +2968,7 @@ export async function main(ns) {
 		}
 	}
 }
-masterstrat.js
+masterstrat.js  (1.60)
 /** @param {NS} ns **/
 
 /*----------
@@ -2334,11 +3027,11 @@ function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar 
 	ret.hT = tardat.hT; // time required to finish a minSec Hack
 	ret.gT = tardat.gT; // time required to finish a minSec Grow
 	ret.wT = tardat.wT; // time required to finish a minSec Weaken
-//	ret.bT = Math.ceil(Math.max(bT, (ret.hT * 8.2 / 3.0 / mc.MaxProcess))); // Buffer Time between attacks
-	ret.cL = cL; // length of a cycle (hgw)
-	ret.hP = Math.ceil(ret.hT / cL); //number of Hack processes continuously running
-	ret.gP = Math.ceil(ret.gT / cL); //number of Grow processes continuously running
-	ret.wP = Math.ceil(ret.wT / cL); //number of Weaken processes continuously running
+//	ret.bT = Math.ceil(Math.max(cL, (ret.hT * 8.2 / 3.0 / mc.MaxProcess))); // Buffer Time between attacks
+	ret.cL = Math.ceil(Math.max(cL, (ret.hT * 8.2 / mc.MaxProcess)));//cL; // length of a cycle (hgw)
+	ret.hP = Math.ceil(ret.hT / ret.cL); //number of Hack processes continuously running
+	ret.gP = Math.ceil(ret.gT / ret.cL); //number of Grow processes continuously running
+	ret.wP = Math.ceil(ret.wT / ret.cL); //number of Weaken processes continuously running
 	ret.totP = ret.hP + ret.gP + ret.wP; //total number of processes needed to run this profile
 
 	//put it all together
@@ -2421,7 +3114,7 @@ export async function main(ns) {
 	} while (loop);
 	ns.print('== MasterStrat complete ==');
 }
-notns.js
+notns.js  (1.60)
 /** @param {NS} ns **/
 import * as mc from "masterconfig.js";
 
@@ -2470,9 +3163,91 @@ export function toms(string) { // parses a string like "1 hours 57 minutes 2.487
 	return (ms == NaN) ? 0 : ms;
 }
 
-// =================================================
-// === SOME better/no cost Singularity functions ===
-// =================================================
+// =============================================
+// === 02 SOME better/no cost Gang functions ===
+// =============================================
+
+export const GangFactions = ['Slum Snakes', 'Tetrads', 'The Syndicate', 'The Dark Army', 'Speakers for the Dead', 'NiteSec', 'The Black Hand'];
+export const GangCFactions = ['Slum Snakes', 'Tetrads', 'The Syndicate', 'The Dark Army', 'Speakers for the Dead'];
+export const GangHFactions = ["NiteSec", "The Black Hand"];
+export const GangTasks = ["Unassigned", "Mug People", "Deal Drugs", "Strongarm Civilians", "Run a Con", "Armed Robbery", "Traffick Illegal Arms", "Threaten & Blackmail", "Human Trafficking", "Terrorism", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
+export const GangCTasks = ["Unassigned", "Mug People", "Deal Drugs", "Strongarm Civilians", "Run a Con", "Armed Robbery", "Traffick Illegal Arms", "Threaten & Blackmail", "Human Trafficking", "Terrorism", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
+export const GangHTasks = ["Unassigned", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
+export const GangTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Mug People", "desc": "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00005, "baseWanted": 0.00005, "baseMoney": 3.6, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 10, "chaWeight": 15, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Deal Drugs", "desc": "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00006, "baseWanted": 0.002, "baseMoney": 15, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 20, "agiWeight": 20, "chaWeight": 60, "difficulty": 3.5, "territory": { "money": 1.2, "respect": 1, "wanted": 1.15 } }, { "name": "Strongarm Civilians", "desc": "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00004, "baseWanted": 0.02, "baseMoney": 7.5, "hackWeight": 10, "strWeight": 25, "defWeight": 25, "dexWeight": 20, "agiWeight": 10, "chaWeight": 10, "difficulty": 5, "territory": { "money": 1.6, "respect": 1.1, "wanted": 1.5 } }, { "name": "Run a Con", "desc": "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00012, "baseWanted": 0.05, "baseMoney": 45, "hackWeight": 0, "strWeight": 5, "defWeight": 5, "dexWeight": 25, "agiWeight": 25, "chaWeight": 40, "difficulty": 14, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Armed Robbery", "desc": "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00014, "baseWanted": 0.1, "baseMoney": 114, "hackWeight": 20, "strWeight": 15, "defWeight": 15, "dexWeight": 20, "agiWeight": 10, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Traffick Illegal Arms", "desc": "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.24, "baseMoney": 174, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 25, "difficulty": 32, "territory": { "money": 1.4, "respect": 1.3, "wanted": 1.25 } }, { "name": "Threaten & Blackmail", "desc": "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.125, "baseMoney": 72, "hackWeight": 25, "strWeight": 25, "defWeight": 0, "dexWeight": 25, "agiWeight": 0, "chaWeight": 25, "difficulty": 28, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Human Trafficking", "desc": "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.004, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 30, "strWeight": 5, "defWeight": 5, "dexWeight": 30, "agiWeight": 0, "chaWeight": 30, "difficulty": 36, "territory": { "money": 1.5, "respect": 1.5, "wanted": 1.6 } }, { "name": "Terrorism", "desc": "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 2, "wanted": 2 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
+export const GangCTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Mug People", "desc": "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00005, "baseWanted": 0.00005, "baseMoney": 3.6, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 10, "chaWeight": 15, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Deal Drugs", "desc": "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00006, "baseWanted": 0.002, "baseMoney": 15, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 20, "agiWeight": 20, "chaWeight": 60, "difficulty": 3.5, "territory": { "money": 1.2, "respect": 1, "wanted": 1.15 } }, { "name": "Strongarm Civilians", "desc": "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00004, "baseWanted": 0.02, "baseMoney": 7.5, "hackWeight": 10, "strWeight": 25, "defWeight": 25, "dexWeight": 20, "agiWeight": 10, "chaWeight": 10, "difficulty": 5, "territory": { "money": 1.6, "respect": 1.1, "wanted": 1.5 } }, { "name": "Run a Con", "desc": "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00012, "baseWanted": 0.05, "baseMoney": 45, "hackWeight": 0, "strWeight": 5, "defWeight": 5, "dexWeight": 25, "agiWeight": 25, "chaWeight": 40, "difficulty": 14, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Armed Robbery", "desc": "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00014, "baseWanted": 0.1, "baseMoney": 114, "hackWeight": 20, "strWeight": 15, "defWeight": 15, "dexWeight": 20, "agiWeight": 10, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Traffick Illegal Arms", "desc": "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.24, "baseMoney": 174, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 25, "difficulty": 32, "territory": { "money": 1.4, "respect": 1.3, "wanted": 1.25 } }, { "name": "Threaten & Blackmail", "desc": "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.125, "baseMoney": 72, "hackWeight": 25, "strWeight": 25, "defWeight": 0, "dexWeight": 25, "agiWeight": 0, "chaWeight": 25, "difficulty": 28, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Human Trafficking", "desc": "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.004, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 30, "strWeight": 5, "defWeight": 5, "dexWeight": 30, "agiWeight": 0, "chaWeight": 30, "difficulty": 36, "territory": { "money": 1.5, "respect": 1.5, "wanted": 1.6 } }, { "name": "Terrorism", "desc": "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 2, "wanted": 2 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
+export const GangHTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
+export const GangEquips = [{ "name": "Baseball Bat", "type": "Weapon", "stats": { "str": 1.04, "def": 1.04 } }, { "name": "Katana", "type": "Weapon", "stats": { "str": 1.08, "def": 1.08, "dex": 1.08 } }, { "name": "Glock 18C", "type": "Weapon", "stats": { "str": 1.1, "def": 1.1, "dex": 1.1, "agi": 1.1 } }, { "name": "P90C", "type": "Weapon", "stats": { "str": 1.12, "def": 1.1, "agi": 1.1 } }, { "name": "Steyr AUG", "type": "Weapon", "stats": { "str": 1.2, "def": 1.15 } }, { "name": "AK-47", "type": "Weapon", "stats": { "str": 1.25, "def": 1.2 } }, { "name": "M15A10 Assault Rifle", "type": "Weapon", "stats": { "str": 1.3, "def": 1.25 } }, { "name": "AWM Sniper Rifle", "type": "Weapon", "stats": { "str": 1.3, "dex": 1.25, "agi": 1.3 } }, { "name": "Bulletproof Vest", "type": "Armor", "stats": { "def": 1.04 } }, { "name": "Full Body Armor", "type": "Armor", "stats": { "def": 1.08 } }, { "name": "Liquid Body Armor", "type": "Armor", "stats": { "def": 1.15, "agi": 1.15 } }, { "name": "Graphene Plating Armor", "type": "Armor", "stats": { "def": 1.2 } }, { "name": "Ford Flex V20", "type": "Vehicle", "stats": { "agi": 1.04, "cha": 1.04 } }, { "name": "ATX1070 Superbike", "type": "Vehicle", "stats": { "agi": 1.08, "cha": 1.08 } }, { "name": "Mercedes-Benz S9001", "type": "Vehicle", "stats": { "agi": 1.12, "cha": 1.12 } }, { "name": "White Ferrari", "type": "Vehicle", "stats": { "agi": 1.16, "cha": 1.16 } }, { "name": "NUKE Rootkit", "type": "Rootkit", "stats": { "hack": 1.05 } }, { "name": "Soulstealer Rootkit", "type": "Rootkit", "stats": { "hack": 1.1 } }, { "name": "Demon Rootkit", "type": "Rootkit", "stats": { "hack": 1.15 } }, { "name": "Hmap Node", "type": "Rootkit", "stats": { "hack": 1.12 } }, { "name": "Jack the Ripper", "type": "Rootkit", "stats": { "hack": 1.15 } }, { "name": "Bionic Arms", "type": "Augmentation", "stats": { "str": 1.3, "dex": 1.3 } }, { "name": "Bionic Legs", "type": "Augmentation", "stats": { "agi": 1.6 } }, { "name": "Bionic Spine", "type": "Augmentation", "stats": { "str": 1.15, "def": 1.15, "dex": 1.15, "agi": 1.15 } }, { "name": "BrachiBlades", "type": "Augmentation", "stats": { "str": 1.4, "def": 1.4 } }, { "name": "Nanofiber Weave", "type": "Augmentation", "stats": { "str": 1.2, "def": 1.2 } }, { "name": "Synthetic Heart", "type": "Augmentation", "stats": { "str": 1.5, "agi": 1.5 } }, { "name": "Synfibril Muscle", "type": "Augmentation", "stats": { "str": 1.3, "def": 1.3 } }, { "name": "BitWire", "type": "Augmentation", "stats": { "hack": 1.05 } }, { "name": "Neuralstimulator", "type": "Augmentation", "stats": { "hack": 1.15 } }, { "name": "DataJack", "type": "Augmentation", "stats": { "hack": 1.1 } }, { "name": "Graphene Bone Lacings", "type": "Augmentation", "stats": { "str": 1.7, "def": 1.7 } }];
+
+export function getGang() { return (Math.asd && Math.asd.gang) ? Math.asd.gang.faction : null; }
+export function hasGang() { return GangFactions.includes(getGang()); }
+export function gangIsCombat(fac = (Math.asd && Math.asd.gang) ? Math.asd.gang.faction : null) { return GangCFactions.includes(fac); }
+export function gangIsHacking(fac = (Math.asd && Math.asd.gang) ? Math.asd.gang.faction : null) { return GangHFactions.includes(fac); }
+export function gangMemberInformation(member) { return (Math.asd && Math.asd.gang) ? Math.asd.gang.memberInfos.filter(a => a.name == member)[0] : null; }
+export function gangGetTask(taskName) { return GangTaskInfo.filter(a => a.name == taskName)[0]; }
+
+export function gangMemberTotalStats(member) { return eval('member.ha' + 'ck') + member.str + member.def + member.dex + member.agi + member.cha; }
+export function statWt(task, member) {
+	return 0.01 * (
+		task.hackWeight * eval('member.ha' + 'ck') +
+		task.strWeight * member.str +
+		task.defWeight * member.def +
+		task.dexWeight * member.dex +
+		task.agiWeight * member.agi +
+		task.chaWeight * member.cha);
+}
+
+export function calcRespectGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
+	if (!gang) { return 0; }
+	if (task.baseRespect === 0) return 0;
+	let statWeight = statWt(task, member);
+	statWeight -= 4 * task.difficulty;
+	if (statWeight <= 0) return 0;
+	const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.respect) / 100);
+	const territoryPenalty = (0.2 * gang.territory + 0.8) * ((Math.asd && Math.asd.BitNodeMultipliers) ? (Math.asd.BitNodeMultipliers.GangSoftcap ?? 1.0) : 1.0);
+	if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+	const respectMult = calcWantedPenalty(gang);
+	return Math.pow(11 * task.baseRespect * statWeight * territoryMult * respectMult, territoryPenalty);
+}
+
+export function calcWantedLevelGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
+	if (!gang) { return 0; }
+	if (task.baseWanted === 0) return 0;
+	let statWeight = statWt(task, member);
+	statWeight -= 3.5 * task.difficulty;
+	if (statWeight <= 0) return 0;
+	const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.wanted) / 100);
+	if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+	if (task.baseWanted < 0) {
+		return 0.4 * task.baseWanted * statWeight * territoryMult;
+	}
+	const calc = (7 * task.baseWanted) / Math.pow(3 * statWeight * territoryMult, 0.8);
+
+	// Put an arbitrary cap on this to prevent wanted level from rising too fast if the
+	// denominator is very small. Might want to rethink formula later
+	return Math.min(100, calc);
+}
+
+export function calcMoneyGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
+	if (!gang) { return 0; }
+	if (task.baseMoney === 0) return 0;
+	let statWeight = statWt(task, member);
+
+	statWeight -= 3.2 * task.difficulty;
+	if (statWeight <= 0) return 0;
+	const territoryMult = Math.max(0.005, Math.pow(gang.territory * 100, task.territory.money) / 100);
+	if (isNaN(territoryMult) || territoryMult <= 0) return 0;
+	const respectMult = calcWantedPenalty(gang);
+	const territoryPenalty = (0.2 * gang.territory + 0.8) * ((Math.asd && Math.asd.BitNodeMultipliers) ? (Math.asd.BitNodeMultipliers.GangSoftcap ?? 1.0) : 1.0);
+	return Math.pow(5 * task.baseMoney * statWeight * territoryMult * respectMult, territoryPenalty);
+}
+
+export function calcWantedPenalty(gang = Math.asd.gang) { return gang.respect / (gang.respect + gang.wantedLevel); }
+export function calcAscensionPointsGain(exp) { return Math.max(exp - 1000, 0); }
+export function calcAscensionMult(points) { return Math.max(Math.pow(points / 2000, 0.5), 1); }
+
+// ====================================================
+// === 04 SOME better/no cost Singularity functions ===
+// ====================================================
 export function hasSingularity() { return hasSource(4); }
 export function hasSource(sNumber) { return ((sourceLvl(sNumber)) || (currentBitNode() == sNumber)); }
 export function currentBitNode() { return (Math.asd) ? (Math.asd.sources[0] ?? 1) : 1; }
@@ -2511,6 +3286,15 @@ export function gNeededAugmentations(hasAugs = Math.asd ? Math.asd.hasAugs : [])
 		if (!hasAugs.includes(aug.name)) { augList.push(aug); }
 	}
 	return augList;
+}
+export function gNeededFactions(hasAugs) { //returns which factions still have augs to purchase
+	const facList = [];
+	for (const aug of augmentDetails) {
+		if (!hasAugs.includes(aug.name)) {
+			for (const fac of aug.factions) { if (!facList.includes(fac)) { facList.push(fac); } }
+		}
+	}
+	return facList;
 }
 
 // ====================================
@@ -2685,7 +3469,7 @@ export async function main(ns) {
 
 }
 */
-scan.js
+scan.js  (7.75)
 /** @param {NS} ns **/
 let facServers = {
 	"CSEC": "yellow",
@@ -2762,7 +3546,7 @@ export async function main(ns) {
 	const list = Math.doc.getElementById("terminal");
 	list.insertAdjacentHTML('beforeend', output);
 }
-sendem.js
+sendem.js  (2.20)
 /** @param {NS} ns **/
 const sFiles = ['_hack.js', '_grow.js', '_weak.js', 'fixem.js', '04_manualhack.js'];
 let asd = {}; //all script data
@@ -2782,7 +3566,7 @@ export async function main(ns) {
 		}
 	}
 }
-test.js
+test.js  (1.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 
@@ -2795,11 +3579,46 @@ export async function main(ns) {
 	ns.disableLog('sleep');
 	ns.clearLog();
 
+	asd.realbT = 12;
+//	ns.print(ns.gang.getGangInformation().territory)
+
+
 	//await ns.writePort(20,10);
-	const ph = ns.getPortHandle(20);
-	ph.length = function() {return this.data.length;}
-	ns.print(ph.length);
-	
+//	const ph = ns.getPortHandle(20);
+//	ph.length = function() {return this.data.length;}
+//	ns.print(ph.length);
+
+/*
+	let gangTasks = [];
+	let gangCTasks = [];
+	let gangHTasks = [];
+	let gangTaskInfo = [];
+	let gangCTaskInfo = [];
+	let gangHTaskInfo = [];
+
+	for (const task of ns.gang.getTaskNames()) {
+		const dat = ns.gang.getTaskStats(task);
+		gangTasks.push(dat.name); gangTaskInfo.push(dat);
+		if (dat.isCombat) {gangCTasks.push(dat.name);gangCTaskInfo.push(dat);}
+		if (dat.isHacking) {gangHTasks.push(dat.name);gangHTaskInfo.push(dat);}
+	}
+	ns.print(gangTasks);
+	ns.print(gangCTasks);
+	ns.print(gangHTasks);
+	ns.print(gangTaskInfo);
+	ns.print(gangCTaskInfo);
+	ns.print(gangHTaskInfo);
+
+	let gangEquipment = [];
+	for (const item of ns.gang.getEquipmentNames()) {
+		let equip = {};
+		equip.name = item;
+		equip.type = ns.gang.getEquipmentType(item);
+		equip.stats = ns.gang.getEquipmentStats(item);
+		gangEquipment.push(equip);
+	}
+	ns.print(gangEquipment);
+*/	
 
 /*
 	const pid = ns.exec('_weak.js','home',1,'phantasy',Math.random(), 1, false);
@@ -2872,7 +3691,7 @@ ns.clearLog();
 	ns.print(asd.bests[0]);
 */
 }
-watchbests.js
+watchbests.js  (1.60)
 /** @param {NS} ns **/
 
 let asd = {};
