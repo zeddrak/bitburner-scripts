@@ -26,7 +26,34 @@ export async function main(ns) {
 	asd.bitnode = bn;
 	asd.sources[0] = bn;
 }
-02_gangdata.js  (9.60)
+02_gangascend.js  (7.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+const ascendInterval = 60 * 1000; //time to wait after ascending to prevent back to back Ascensions
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+	if (!asd.gang) return;
+	if (!nt.hasGang()) return;
+
+	const gang = asd.gang;
+	const ascStat = nt.gangIsCombat() ? 'str' : 'hack';
+	for (const member of gang.members) {
+		await ns.sleep(0);
+		try {
+			if (ns.gang.getAscensionResult(member)[ascStat] >= 2.0) {
+				ns.gang.ascendMember(member);
+				ns.tprint('==ascended ' + member)
+				//ns.sleep(ascendInterval);
+				return; //don't hog memory, ascend one member, then let doall call it again later.
+			}
+		} catch { }
+	}
+
+}
+02_gangdata.js  (8.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -40,9 +67,8 @@ export async function main(ns) {
 
 	try {
 		asd.gang = ns.gang.getGangInformation();
-		if (!nt.hasGang() && !ns.gang.createGang(mc.PreferedGangFaction)) { return; }
 		do {
-			while (ns.gang.recruitMember(Math.random())) { ns.sleep(1); }
+			if (ns.gang.recruitMember(Math.random())) { await ns.sleep(10); }
 			asd.gang = ns.gang.getGangInformation();
 			asd.gang.members = ns.gang.getMemberNames();
 
@@ -74,7 +100,7 @@ export async function main(ns) {
 		}
 	} catch {}
 }
-02_ganginit.js  (1.60)
+02_ganginit.js  (2.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -82,6 +108,14 @@ import * as mc from "masterconfig.js";
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	try {
+		if (!nt.hasGang() && ns.gang.createGang(mc.PreferedGangFaction)) { 
+			asd.gang.faction = mc.PreferedGangFaction;
+		}
+	} catch { }
+
+	//ToDo: Have this script start your gang when you have enough Karma
 
 	/*//code for populating notns arrays should they be changed
 	const SourceDats = [
@@ -450,36 +484,42 @@ export async function main(ns) {
 	  },
 	},
   ];
-  
+
+	const SourceDats = [];
+	for (const name of ns.gang.getTaskNames()) {
+		SourceDats.push(ns.gang.getTaskStats(name))
+	}
+
 	let gangTasks = [];
 	let gangCTasks = [];
 	let gangHTasks = [];
 	let gangTaskInfo = [];
 	let gangCTaskInfo = [];
 	let gangHTaskInfo = [];
-  
+
 	for (const dat of SourceDats) {
-	  gangTasks.push(dat.name); gangTaskInfo.push(dat);
-	  if (dat.isCombat) {gangCTasks.push(dat.name);gangCTaskInfo.push(dat);}
-	  if (dat.isHacking) {gangHTasks.push(dat.name);gangHTaskInfo.push(dat);}
+		gangTasks.push(dat.name); gangTaskInfo.push(dat);
+		if (dat.isCombat) { gangCTasks.push(dat.name); gangCTaskInfo.push(dat); }
+		if (dat.isHacking) { gangHTasks.push(dat.name); gangHTaskInfo.push(dat); }
 	}
+
 	ns.print(gangTasks);
 	ns.print(gangCTasks);
 	ns.print(gangHTasks);
 	ns.print(gangTaskInfo);
 	ns.print(gangCTaskInfo);
 	ns.print(gangHTaskInfo);
-  
+
 	let gangEquipment = [];
 	for (const item of ns.gang.getEquipmentNames()) {
-	  let equip = {};
-	  equip.name = item;
-	  equip.type = ns.gang.getEquipmentType(item);
-	  equip.stats = ns.gang.getEquipmentStats(item);
-	  gangEquipment.push(equip);
+		let equip = {};
+		equip.name = item;
+		equip.type = ns.gang.getEquipmentType(item);
+		equip.stats = ns.gang.getEquipmentStats(item);
+		gangEquipment.push(equip);
 	}
 	ns.print(gangEquipment);
-	*/
+*/
 }
 02_gangtasks.js  (3.60)
 /** @param {NS} ns **/
@@ -495,12 +535,14 @@ const powerInterval = 17 * 1000; //power updates every ~20 seconds
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+	if (!nt.hasGang()) return;
 
 	let powerTime = Date.now() + powerInterval;
+	const RepLimit = 2000000 * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.AugmentationRepCost ?? 1) : 1) 
 	while (true) {
 		const gang = asd.gang;
 		const gangRep = asd.factionReps[asd.factionReps.indexOf(gang.faction) + 1];
-		if (gang.territory < 1.0 && Date.now() > powerTime) { //asign to Teritory Power and await update
+		if (gang.territory < 0.999 && Date.now() > powerTime) { //asign to Teritory Power and await update
 			for (const member of gang.members) {
 				ns.gang.setMemberTask(member, 'Territory Warfare');
 			}
@@ -513,54 +555,66 @@ export async function main(ns) {
 		let minMember = '';
 		const jobs = [];
 		for (const member of gang.memberInfos) {
+			await ns.sleep(0);
 			const totStats = nt.gangMemberTotalStats(member);
 			if (totStats < minStats) {
 				minStats = totStats;
 				minMember = member.name;
 			}
-			let maxRespect = 0;
+			let maxRespect = -1;
 			let maxRTask = null;
-			for (const task of nt.GangCTaskInfo) {
-				let taskRespect = (gangRep > 2000000) ? nt.calcMoneyGain(member, task, gang) : nt.calcRespectGain(member, task, gang);
+			const taskPool = nt.gangIsHacking() ? nt.GangHTaskInfo : nt.GangCTaskInfo;
+			for (const task of taskPool) {
+				let taskRespect = (gangRep > RepLimit) ? nt.calcMoneyGain(member, task, gang) : nt.calcRespectGain(member, task, gang);
 				if (taskRespect - maxRespect > 0) {
 					maxRespect = taskRespect;
 					maxRTask = task;
 				}
 			}
-			const wantedAmt = nt.calcWantedLevelGain(member, maxRTask, gang);;
+			const wantedAmt = nt.calcWantedLevelGain(member, maxRTask, gang);
 			jobs.push(member.name);
 			jobs.push({ name: member.name, job: maxRTask.name, wanted: wantedAmt, taskInfo: maxRTask });
 			totalWanted += wantedAmt;
-			ns.gang.setMemberTask(member.name, maxRTask.name);
+			// ns.gang.setMemberTask(member.name, maxRTask.name);
 		}
 		//assign weakest to train
-		ns.gang.setMemberTask(minMember, 'Train Combat');
-		totalWanted -= jobs[jobs.indexOf(minMember) + 1].wanted;
+		const trainingJob = (nt.gangIsHacking() && Math.random() < 0.75) ? 'Train Hacking' : 'Train Combat';
+		const trainingTask = nt.gangGetTask(trainingJob);
+		let mi = jobs.indexOf(minMember) + 1;
+		totalWanted -= jobs[mi].wanted;
+		jobs[mi].job = trainingJob;
+		jobs[mi].taskInfo = trainingTask;
+		jobs[mi].wanted = 0;
+		// ns.gang.setMemberTask(minMember, trainingJob);
 
 		//assign Vigilante Justice
 		const justiceMembers = [];
 		while (totalWanted > 0) {
-			await ns.sleep(1);
-			let minJustice = Number.NEGATIVE_INFINITY;
+			await ns.sleep(0);
+			let minJustice = 0;
 			let minJMember = '';
-			const justiceName = 'Vigilante Justice';
+			const justiceName = (nt.gangIsHacking() && Math.random() < 0.75) ? 'Ethical Hacking' : 'Vigilante Justice';
 			const justiceTask = nt.gangGetTask(justiceName);
 			for (const member of gang.memberInfos) {
 				if (minMember == member.name || justiceMembers.includes(member.name)) continue;
 				const justiceAmt = nt.calcWantedLevelGain(member, justiceTask, gang);
-				if (justiceAmt > minJustice) {
+				if (justiceAmt < minJustice) {
 					minJustice = justiceAmt;
 					minJMember = member.name;
 				}
 			}
 			if (minJMember == '') { break; }
 			justiceMembers.push(minJMember);
-			totalWanted -= jobs[jobs.indexOf(minJMember) + 1].wanted;
+			const mi = jobs.indexOf(minJMember) + 1;
+			totalWanted -= jobs[mi].wanted;
 			totalWanted += minJustice;
-			ns.gang.setMemberTask(minJMember, 'Vigilante Justice');
-			//TODO remove their wanted contribution
+			jobs[mi].job = justiceName;
+			jobs[mi].taskInfo = justiceTask;
+			jobs[mi].wanted = minJustice;
+			// ns.gang.setMemberTask(minJMember, justiceName);
 		}
-		await ns.sleep(500);
+		for (let i = 1; i < jobs.length; i += 2) { ns.gang.setMemberTask(jobs[i].name, jobs[i].job); }
+		await ns.sleep(1000);
 	}
 }
 02_gangwarfare.js  (3.60)
@@ -770,9 +824,14 @@ Manual hack = hackXp / manualHackTime
 
 // attempts to automatically commit a number of crimes equal to the first parameter
 // REQUIRES Singularity access (BN 4) to operate
-// WARNING! WARNING! locks up interface, so argument is set too high, IT MUST BE MANUALLY ENDED!
+// WARNING! WARNING! locks up interface, so if argument is set high, IT MUST BE MANUALLY ENDED!
 // So make sure to start with --tail (AND DON'T CLOSE THE WINDOW) so you can click kill when you're ready to stop or pass in a reasonable parameter
 
+//parameters ROUNDS?30 (number of crimes to commit)
+//optional (in any order)
+// 'murder'= homicide to -100 karma
+// 'gang' = highest 100% chance to -54k karma
+// a list of any crimes = crimes to do at random
 const crimeList = ['Kidnap', 'Assassination', 'Heist']; //list of most profitable crimes (in terms of intelligence xp/sec)
 let asd = {}; //all script data
 export async function main(ns) {
@@ -783,21 +842,27 @@ export async function main(ns) {
 	ns.clearLog();
 
 	let rounds = 30; //default to 30 crimes if no parameter is passed in
-	let crime = '';
-	if (ns.args.includes('Homicide') || ns.args.includes('kill')) { crime = 'Homocide'; }
+	let crimes = '';
 	if (parseInt(ns.args[0], 10) > 0) { rounds = parseInt(ns.args[0], 10); }
 
 	//homicide for body count for faction reqs, failures don't matter, still get xp
-	while (crime == 'Homocide' && ns.heart.break() > -100 && rounds > 0) {
+	while (ns.args.includes('murder') && ns.heart.break() > -100 && rounds > 0) {
 		await ns.sleep(0);
 		rounds--;
 		ns.commitCrime('Homicide');
 		while (ns.isBusy()) { await ns.sleep(100); } //wait for crime to complete
 	}
-	//if (crime == 'Homocide') { return; } //don't run high crimes if only for kill count
+
+	//homicide for body count for faction reqs, failures don't matter, still get xp
+	while (ns.args.includes('gang') && ns.heart.break() > -54000 && rounds > 0) {
+		await ns.sleep(0);
+		rounds--;
+		ns.commitCrime('Homicide');
+		while (ns.isBusy()) { await ns.sleep(100); } //wait for crime to complete
+	}
 
 	//best crimes for intelligence xp/s
-	while (rounds > 0) { //High Crimes for intelligence Xp
+	while (ns.args.includes('high') && rounds > 0) { //High Crimes for intelligence Xp
 		await ns.sleep(0);
 		rounds--;
 		ns.commitCrime(crimeList[Math.floor(Math.random() * crimeList.length)]);
@@ -1602,6 +1667,7 @@ export async function main(ns) {
 	const ccts = gatherCcts();
 	showCcts(ccts);
 	solveCcts(ccts);
+	await ns.sleep(0);
 }
 connect.js  (1.80)
 /** @param {NS} ns **/
@@ -1660,11 +1726,11 @@ export async function main(ns) {
 	asd.ram = 4;
 	asd.gang = {};
 
-	try { ns.run('05_bitnode.js'); } catch { return; }
-	try { ns.run('00_sourcefiles.js'); } catch { return; }
-	try { ns.run('00_getwin.js'); } catch { return; }
-	try { ns.run('00_getdoc.js'); } catch { return; }
-	try { ns.run('04_ownedaugs.js'); } catch { return; }
+	try { ns.run('05_bitnode.js'); await ns.sleep(100); } catch { return; }
+	try { ns.run('00_sourcefiles.js'); await ns.sleep(100); } catch { return; }
+	try { ns.run('00_getwin.js'); await ns.sleep(100); } catch { return; }
+	try { ns.run('00_getdoc.js'); await ns.sleep(100); } catch { return; }
+	try { ns.run('04_ownedaugs.js'); await ns.sleep(500); } catch { return; }
 	await ns.sleep(50);
 	try { ns.run('karma.js'); } catch { }
 
@@ -1769,23 +1835,31 @@ export async function main(ns) {
 			else { ns.run('masterhacknet.js'); await ns.sleep(500); }
 			await ns.sleep(500);
 		}
+		//7.60GB - ascends one gang member
+		if (nt.hasGang() && !scriptRunning(ns, '02_gangascend.js') && nt.canRun('home', '02_gangascend.js', true)) {
+			ns.run('02_gangascend.js'); await ns.sleep(500);
+		}
+		//2.60GB - creates your gang
+		if (!nt.hasGang() && !scriptRunning(ns, '02_ganginit.js') && nt.canRun('home', '02_ganginit.js', true)) {
+			ns.run('02_ganginit.js'); await ns.sleep(500);
+		}
 		//8.60GB - gathers gang related data to asd.gang
-		if (!scriptRunning(ns, '02_gangdata.js') && nt.canRun('home', '02_gangdata.js', true)) {
+		if (nt.hasGang() && !scriptRunning(ns, '02_gangdata.js') && nt.canRun('home', '02_gangdata.js', true)) {
 			if (nt.availRam('home') > (32 + nt.scriptCost('02_gangdata.js')) && scriptRunning(ns, 'masterhacknet.js')) {
 				ns.run('02_gangdata.js', 1, 'loop');
 			}
 			ns.run('02_gangdata.js'); await ns.sleep(500);
 		}
 		//5.60GB - equips gang members
-		if (!scriptRunning(ns, '02_gangequip.js') && nt.canRun('home', '02_gangequip.js', true)) {
+		if (nt.hasGang() && !scriptRunning(ns, '02_gangequip.js') && nt.canRun('home', '02_gangequip.js', true)) {
 			ns.run('02_gangequip.js'); await ns.sleep(500);
 		}
 		//3.60GB - manages gang member tasks
-		if (!scriptRunning(ns, '02_gangtasks.js') && nt.canRun('home', '02_gangtasks.js', true)) {
+		if (nt.hasGang() && !scriptRunning(ns, '02_gangtasks.js') && nt.canRun('home', '02_gangtasks.js', true)) {
 			ns.run('02_gangtasks.js'); await ns.sleep(500);
 		}
 		//3.60GB - manages gang warfate
-		if (!scriptRunning(ns, '02_gangwarfare.js') && nt.canRun('home', '02_gangwarfare.js', true)) {
+		if (nt.hasGang() && !scriptRunning(ns, '02_gangwarfare.js') && nt.canRun('home', '02_gangwarfare.js', true)) {
 			ns.run('02_gangwarfare.js'); await ns.sleep(500);
 		}
 	}
@@ -2213,7 +2287,7 @@ masterconfig.js  (1.60)
 //configuration constants for Drak's Masterhacker serries of scripts
 export const HomeReserveMax = 100; //max amt of ram to keep free at home
 export const HomeReserveMin = 10; //min amt of ram to keep free at home
-export const HomeReservePortion = 0.10; //decimal% of home's ram to reserve, bounded by above
+export const HomeReservePortion = 0.25; //decimal% of home's ram to reserve, bounded by above
 // MasterScripts will generally attempt to reserve a HomeReservePortion of home's ram for processing scripts, bounced by the above
 
 export const SmlRam = 0.10; //portion of home ram below which a server is not used for the main hacking scripts
@@ -2222,17 +2296,17 @@ export const NoticeInterval = 5 * 60 * 1000; //amount of time between notices (c
 export const BestThresh = 1.10; //How much better a new target has to be before swapping (to reduce profit loss to overfrequent target swapping)
 // ^NOT YET IMPLEMENTED
 export const MaxAmt = 0.99; // max amount to steal per hack (decimal%) - can generally leave this alone, can raise to 1.0 if desired for stocks or the like
-export const MaxProcess = 8000; //Maximum allowed concurrent processes - raising this is like a game of chicken with a cliff...
+export const MaxProcess = 20000; //Maximum allowed concurrent processes - raising this is like a game of chicken with a cliff...
 // as long as it's low enough, everything's fine... Raise it a little too much though and your game will become unstabe, take longer to recover after autosaves, and just generally make lag spikes worse - MUCH worse
 // Try to find a level that doesn't tax your game too much, but also doesn't completely nerf your income.
 // Recommended ranges are 4000-10000; but is heavily hardware and environment dependant, so feel free to go outside these ranges as long as things feel comfortable for you
-export const BN = 1.10; //buffer threads extra grow and weaken threads to help keep stability
-export const MinbT = 6; //MINIMUM bufferTime (time between each attack - like h bT g bT w) in milliseconds;
+export const BN = 1.0; //buffer threads extra grow and weaken threads to help keep stability
+export const MinbT = 3; //MINIMUM bufferTime (time between each attack - like h bT g bT w) in milliseconds;
 // lower MinbT means that attacks will try to land closer together, which leaves more room in the cycle for low security launches which keeps the order more stable
 // but too low and the engine's randomnesss makes them land out of order - resulting in more aborted hacks and reducing profit
 // Raise MinbT (and mincL as appropriate) and or lower MaxProcess if you're getting too many collissions and losing alot of profit to killed hacks
 // Recommended range is 6-10, higher is perfectly fine if desired but can reduce profits during later installs, below 6 is pushing the limits of JavaScript itself and mot recommended
-export const MincL = 12;//MINIMUM cycle Length (time between the START of complete hgw cycles, or time between hacks) in milliseconds - at least 2x MinbT, make longer for a generally more stable game and rotation
+export const MincL = 9;//MINIMUM cycle Length (time between the START of complete hgw cycles, or time between hacks) in milliseconds - at least 2x MinbT, make longer for a generally more stable game and rotation
 // lower cL = more hacks per second (more effecient to a point)
 // but also means more chance of collissions and greater rounding error accumulation, which = reduced money
 // try to find the sweat spot for your computer and environment
@@ -2251,7 +2325,7 @@ export const MaxTargets = 1; //Maximum number of servers to atatck - currently o
 //==========
 //== Gang ==
 //==========
-export const PreferedGangFaction = 'Slum Snakes'; 
+export const PreferedGangFaction = 'Slum Snakes';
 
 /*
 // vestigial main
@@ -2431,6 +2505,7 @@ export async function main(ns) {
 		count++;
 	} while (loop);
 	ns.print('== datamaster complete ==');
+	await ns.sleep(0);
 }
 masterfixem.js  (2.90)
 /** @param {NS} ns **/
@@ -2691,7 +2766,8 @@ function launchAttack(ns, type, tar, threads = 1) {
 }
 
 function updatebT(start) {
-	realbT += Math.min(mc.AdaptSpeed*realbT, Math.max(-mc.AdaptSpeed*realbT, ((Date.now() - start) - realbT) * mc.AdaptSpeed)); //update the rolling average
+	realbT += Math.min(mc.AdaptSpeed * realbT, Math.max(-mc.AdaptSpeed * realbT, ((Date.now() - start) - realbT) * mc.AdaptSpeed)); //update the rolling average
+	realbT = Math.max(1, realbT); // never go below 1 to prevent zeroing out
 	asd.realbT = realbT; //Math.max(mc.MinbT, Math.ceil(realbT)); //update the strat target
 }
 /*
@@ -2717,17 +2793,16 @@ let hpids = [];
 //let hgw = false;
 let realbT = mc.MinbT;
 
-let ss;
+//let ss;
 let asd = {}; //all script data
 export async function main(ns) {
-	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
-	asd = Math.asd; //if port's not empty, populate asd
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd;
 	asd.tixShort = asd.tixShort ?? false;
 	asd.tixLong = asd.tixLong ?? false;
-	asd.realbT = asd.realbT??(2 * mc.MinbT);
-	realbT = asd.realbT;
+	realbT = mc.MinbT;
+	asd.realbT = realbT;
 
-	ss=ns;
+	//ss=ns;
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
@@ -2745,6 +2820,8 @@ export async function main(ns) {
 
 		let totCost = 0; //add to this each time an active profile is added; up to totRam
 		let totProc = 0; //add to this each time an active profile is added; up to MaxProcess
+
+		let targets = [];
 		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam && totProc < mc.MaxProcess; i++) { //ToDo: add totProc check
 			await ns.sleep(1);
 
@@ -2766,10 +2843,12 @@ export async function main(ns) {
 			let tL = Date.now(); //test collision launch time
 
 			let curTar = asd.bests[i].tar;
-			//			hgw = false;
-			//			let start = Date.now();
+			//hgw = false;
+			//let start = Date.now();
 
 			while (asd.bests[i].tar == curTar) { //will need to be removed if multiple targets are to be enabld
+				await ns.sleep(0);
+				/*
 				if (asd.calibrate) {
 					ns.disableLog('exec');
 					ns.disableLog('kill');
@@ -2779,9 +2858,9 @@ export async function main(ns) {
 					ns.enableLog('exec');
 					ns.enableLog('kill');
 				}
-				await ns.sleep(0);
+				*/
 
-				//				if (!hgw) { start = Date.now(); }
+				//if (!hgw) { start = Date.now(); }
 				const best = asd.bests[i];
 				const hgSec = (best.hS + best.gS) * 1.1;
 				const secTol = dat.minDifficulty + Math.max(1, hgSec); //don't allow sec to rise by more than 1
@@ -2793,17 +2872,17 @@ export async function main(ns) {
 				//if the queue's length has gone past the number of expected hacks, plus a buffer, remove the oldest extra hpids (should be mostly dead hpids)
 				const hpidTrim = Math.max(0, Math.floor(hpids.length - best.hP - 30));
 				if (hpidTrim) { //truthy hack for speed - the above math means that hpidTrim is either 0(false), or positive (true)
-					hpids.splice(0,  hpidTrim); //keep the hack pid queue a little tidy
+					hpids.splice(0, hpidTrim); //keep the hack pid queue a little tidy
 				}
 				//collision detection (and prevention?)
 				if (Date.now() > tL && (((ns.getServerSecurityLevel(tar) - secTol) > 0) || ((ns.getServerMoneyAvailable(tar) - monTol) < 0))) {
 					tL = Date.now() + cL; //don't remove more hacks until at least 1 grow/weaken pair has had a chance to fix things
-/*					//killing hacks set to land in the next cycle length - runningScript.onlineRunningTime seems too unreluable
+					/*//killing hacks set to land in the next cycle length - runningScript.onlineRunningTime seems too unreluable
 					for (let i = 0; i < hpids.length && i<15; i++) { //kill all hacks due to execute this cycle
 						await ns.sleep(0);
-						if (thiscL(ns, hpids[i], cL)) { ns.kill(hpids.splice(i,1)[0]); --i;} //if set to complete within a cycle, kill and remove from queue
+					if (thiscL(ns, hpids[i], cL)) { ns.kill(hpids.splice(i,1)[0]); --i;} //if set to complete within a cycle, kill and remove from queue
 					}
-*/
+					*/
 					//blind killing method (faster, but less accurate)
 					let hpidsIndex = 0; //start at the beginning of the queue and go until you kill 5 hacks (or reach the end)
 					for (let hackKills = 0; hackKills < 5 && hpidsIndex < hpids.length; hpidsIndex++) { //try for 5 successful kills
@@ -2827,143 +2906,12 @@ export async function main(ns) {
 					launchAttack(ns, 'h', tar, best.hN);
 					hL = Date.now() + cL;
 				}
-				//				ns.print(hgw);
-				//				if (hgw) {
-				//					realcL += Math.min(0.0001*realcL, Math.max(-0.0001*realcL, (5 * (Date.now() - start) - realcL) * 0.0001*realcL)); //update the rolling average
-				//					asd.realcL = Math.max(mc.MincL, Math.ceil(realcL)); //update the strat target
-				//					hgw = false;
-				//				}
-			}
-		}
-	}
-}
-masterspawnbak.js  (3.95)
-/** @param {NS} ns **/
-import * as nt from "notns.js";
-import * as mc from "masterconfig.js";
-
-
-function freeRam(ns, server) { //uses getServerRam to ensure up to date values to avoid trying to generate threads w/o enough RAM
-	try {
-		return nt.maxRam(server) - ns.getServerUsedRam(server) - Math.max(0, ((server == 'home') ? nt.homeReserve() : 0));
-	}
-	catch { }
-	return 0;
-}
-
-function launchAttack(ns, type, tar, threads = 1) {
-	const script = (type == 'h') ? '_hack.js' : (type == 'g') ? '_grow.js' : '_weak.js'; //default to w
-	const size = nt.scriptCost(script);
-	for (let i = ((type == 'g') ? 0 : 1); i < ress.length && threads > 0; i++) { //sart at home for grows; largest non-home server for others.
-		const res = ress[i];
-		const maxth = Math.max(0, Math.floor(freeRam(ns, res) / size))
-		if (maxth >= 1) {
-			//adjust threads needed if server has more cores
-			const coreMult = ((res == 'home') && (type == 'w' || type == 'g')) ? asd.homeCoreMult : 1.0;
-			const th = Math.min(Math.max(1, Math.ceil(threads / coreMult)), maxth); //threads to assign to this attack
-			const tixBool = (type == 'h' && asd.tixShort) || (type == 'g' && asd.tixLong); //manipulating the market?
-			const pid = ns.exec(script, res, th, tar, Math.random(), th, tixBool);
-			if (pid > 0) {
-				threads -= Math.floor(th * coreMult);
-				if (type == 'h') { hpids.push(pid); }
-			}
-		}
-	}
-}
-
-function pastcL (pid, cL) { //retuns true if pid completes within the CycleLength
-	const rs = ns.getRunningScript(pid);
-	if (!rs) {return false;}
-	let string = '';
-	for (const log of rs.logs) {
-		if (log.includes('Executing on')) {
-			string = log.substring(log.indexOf(' in ')+4,log.indexOf('(t=')-1);
-			break;
-		}
-	}
-	return (nt.toms(string) - rs.onlineRunningTime*1000 - cL > 0);
-}
-
-let ress = [];
-let hpids = [];
-let gpids = [];
-
-let asd = {}; //all script data
-export async function main(ns) {
-	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
-	asd = Math.asd; //if port's not empty, populate asd
-	asd.tixShort = asd.tixShort ?? false;
-	asd.tixLong = asd.tixLong ?? false;
-
-	ns.disableLog('disableLog');
-	ns.disableLog('sleep');
-	ns.disableLog('clearLog');
-	ns.disableLog('getServerMaxRam');
-	ns.disableLog('getServerUsedRam');
-	ns.disableLog('getServerMoneyAvailable');
-	//	ns.disableLog('exec');
-	ns.disableLog('getServerSecurityLevel');
-	ns.clearLog();
-
-	while (true) {
-		await ns.sleep(0);
-
-		let totCost = 0; //add to this each time an active profile is added; up to totRam
-		//		let totProc = 0; //add to this each time an active profile is added; up to MaxProcess
-		for (let i = 0; i < asd.bests.length && i < mc.MaxTargets && totCost < asd.totRam; i++) { //ToDo: add totProc check
-			await ns.sleep(1);
-
-			try { ress = asd.servers.res; } catch { }
-
-			totCost += asd.bests[i].cost;
-			const tar = asd.bests[i].tar;
-
-			const dat = asd.servers.dat[asd.servers.dat.indexOf(tar) + 1];
-			const hT = dat.hT; // length of a hack
-			const gT = dat.gT; // length of a grow
-			const wT = dat.wT; // length of a weaken
-
-			let wL = Date.now() + 100; // weaken launch time
-			let gL = wL - 5; //grow launch time
-			let hL = gL - 5; //hack launch time
-//			let gL = wL + wT - gT + 5 * asd.bests[i].cL - 5; //grow launch time
-//			let hL = gL + gT - hT + 5 * asd.bests[i].cL - 5; //hack launch time
-//			let tL = Date.now(); //test server launch time
-
-			let curTar = asd.bests[i].tar;
-			while (asd.bests[i].tar == curTar) { //will need to be removed if multiple targets are to be enabld
-				await ns.sleep(0);
-
-				const hgSec = asd.bests[i].hS + asd.bests[i].gS
-				const secTol = dat.minDifficulty + Math.max(1, hgSec); //don't allow sec to rise by more than 1
-				const monTol = (1.0 - asd.bests[i].amt) * 0.90 * dat.moneyMax; //don't allow more than 1 hack to hit
-
-				const cL = asd.bests[i].cL;
-
-				//ToDo - make the queue less ineffecient
-				//clean up old hPids
-				if (hpids.length - asd.bests[i].hP > 0) {
-					hpids.slice(0, Math.max(0, hpids.length - asd.bests[i].hP));
-				}
-				//collission detection (and prevention?)
-				if ((((ns.getServerSecurityLevel(tar) - secTol) > 0) || ((ns.getServerMoneyAvailable(tar) - monTol) < 0))) {
-					let pid = hpids.shift()
-					while (hpids.length > 0 && !pastcL(pid)) { ns.kill(pid); await ns.sleep(0) } // kill until a hack is actually killed (or no hacks remain)
-				}
-
-				try { ress = asd.servers.res; } catch { continue; }
-				if (Date.now() > hL) {
-					launchAttack(ns, 'h', tar, asd.bests[i].hN);
-					hL = Date.now() + cL;
-				}
-				if (Date.now() > gL) {
-					launchAttack(ns, 'g', tar, asd.bests[i].gN);
-					gL = Date.now() + cL;
-				}
-				if (Date.now() > wL) {
-					launchAttack(ns, 'w', tar, asd.bests[i].wN);
-					wL = Date.now() + cL;
-				}
+				//ns.print(hgw);
+				//if (hgw) {
+				//	realcL += Math.min(0.0001*realcL, Math.max(-0.0001*realcL, (5 * (Date.now() - start) - realcL) * 0.0001*realcL)); //update the rolling average
+				//	asd.realcL = Math.max(mc.MincL, Math.ceil(realcL)); //update the strat target
+				//	hgw = false;
+				//}
 			}
 		}
 	}
@@ -3027,7 +2975,7 @@ function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar 
 	ret.hT = tardat.hT; // time required to finish a minSec Hack
 	ret.gT = tardat.gT; // time required to finish a minSec Grow
 	ret.wT = tardat.wT; // time required to finish a minSec Weaken
-//	ret.bT = Math.ceil(Math.max(cL, (ret.hT * 8.2 / 3.0 / mc.MaxProcess))); // Buffer Time between attacks
+	//	ret.bT = Math.ceil(Math.max(cL, (ret.hT * 8.2 / 3.0 / mc.MaxProcess))); // Buffer Time between attacks
 	ret.cL = Math.ceil(Math.max(cL, (ret.hT * 8.2 / mc.MaxProcess)));//cL; // length of a cycle (hgw)
 	ret.hP = Math.ceil(ret.hT / ret.cL); //number of Hack processes continuously running
 	ret.gP = Math.ceil(ret.gT / ret.cL); //number of Grow processes continuously running
@@ -3047,7 +2995,7 @@ export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	if (ns.args.includes('clear') || !Array.isArray(asd.bests)) { asd.bests = []; }
-//	asd.realcL = asd.realcL??mc.MincL;
+	//	asd.realcL = asd.realcL??mc.MincL;
 
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
@@ -3086,9 +3034,9 @@ export async function main(ns) {
 			else if (
 				(maxCost - bests[bi].cost < 0) //overRam, remove profile
 				|| (mc.MaxAmt - bests[bi].amt < 0) //over hack amt limit, remove profile
-//				|| (bests[bi].cL -1.1*asd.realcL > 0) //to far above realcL, remove profile
-//				|| (bests[bi].cL -0.9*asd.realcL < 0) //to far below realcL, remove profile
-				) { bests[bi] = ret; } //check that profile is still valid
+				//|| (bests[bi].cL -1.1*asd.realcL > 0) //to far above realcL, remove profile
+				//|| (bests[bi].cL -0.9*asd.realcL < 0) //to far below realcL, remove profile
+			) { bests[bi] = ret; } //check that profile is still valid
 			do {
 				await ns.sleep(0);
 
@@ -3111,6 +3059,27 @@ export async function main(ns) {
 		bests.sort((a, b) => (b.value - a.value > 0) ? 1 : (b.value == a.value) ? ((b.cost - a.cost > 0) ? -1 : 1) : -1);
 		asd.bests = bests;
 		count++;
+		// update targets
+
+/*
+		let targets = []; //prep targets array
+		for (let i = 0; i < bests.length && i < mc.MaxTargets && totCost < asd.totRam && totProc < mc.MaxProcess; i++) {
+			await ns.sleep(0);
+			//ToDo: sort targets low to high?
+			const tar = bests[i].tar;
+			let ti = targets.findIndex(a => a.tar == tar);
+			if (ti >= 0) {//already present, update and continue
+				targets[ti] = bests[i];
+				continue;
+			}
+			//ToDo check for too much RAM or too much Process)
+			if (targets.length < i) {targets.push(asd.bests[i]); continue;} //there's room in targets for this best, append and continue
+			else { //repace lowest target if best is better enough
+				for (let minTarget = 0; minTarget < )
+			}
+		}
+*/
+
 	} while (loop);
 	ns.print('== MasterStrat complete ==');
 }
@@ -3170,12 +3139,12 @@ export function toms(string) { // parses a string like "1 hours 57 minutes 2.487
 export const GangFactions = ['Slum Snakes', 'Tetrads', 'The Syndicate', 'The Dark Army', 'Speakers for the Dead', 'NiteSec', 'The Black Hand'];
 export const GangCFactions = ['Slum Snakes', 'Tetrads', 'The Syndicate', 'The Dark Army', 'Speakers for the Dead'];
 export const GangHFactions = ["NiteSec", "The Black Hand"];
-export const GangTasks = ["Unassigned", "Mug People", "Deal Drugs", "Strongarm Civilians", "Run a Con", "Armed Robbery", "Traffick Illegal Arms", "Threaten & Blackmail", "Human Trafficking", "Terrorism", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
+export const GangTasks = ["Unassigned", "Ransomware", "Phishing", "Identity Theft", "DDoS Attacks", "Plant Virus", "Fraud & Counterfeiting", "Money Laundering", "Cyberterrorism", "Ethical Hacking", "Mug People", "Deal Drugs", "Strongarm Civilians", "Run a Con", "Armed Robbery", "Traffick Illegal Arms", "Threaten & Blackmail", "Human Trafficking", "Terrorism", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
 export const GangCTasks = ["Unassigned", "Mug People", "Deal Drugs", "Strongarm Civilians", "Run a Con", "Armed Robbery", "Traffick Illegal Arms", "Threaten & Blackmail", "Human Trafficking", "Terrorism", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
-export const GangHTasks = ["Unassigned", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
-export const GangTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Mug People", "desc": "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00005, "baseWanted": 0.00005, "baseMoney": 3.6, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 10, "chaWeight": 15, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Deal Drugs", "desc": "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00006, "baseWanted": 0.002, "baseMoney": 15, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 20, "agiWeight": 20, "chaWeight": 60, "difficulty": 3.5, "territory": { "money": 1.2, "respect": 1, "wanted": 1.15 } }, { "name": "Strongarm Civilians", "desc": "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00004, "baseWanted": 0.02, "baseMoney": 7.5, "hackWeight": 10, "strWeight": 25, "defWeight": 25, "dexWeight": 20, "agiWeight": 10, "chaWeight": 10, "difficulty": 5, "territory": { "money": 1.6, "respect": 1.1, "wanted": 1.5 } }, { "name": "Run a Con", "desc": "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00012, "baseWanted": 0.05, "baseMoney": 45, "hackWeight": 0, "strWeight": 5, "defWeight": 5, "dexWeight": 25, "agiWeight": 25, "chaWeight": 40, "difficulty": 14, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Armed Robbery", "desc": "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00014, "baseWanted": 0.1, "baseMoney": 114, "hackWeight": 20, "strWeight": 15, "defWeight": 15, "dexWeight": 20, "agiWeight": 10, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Traffick Illegal Arms", "desc": "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.24, "baseMoney": 174, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 25, "difficulty": 32, "territory": { "money": 1.4, "respect": 1.3, "wanted": 1.25 } }, { "name": "Threaten & Blackmail", "desc": "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.125, "baseMoney": 72, "hackWeight": 25, "strWeight": 25, "defWeight": 0, "dexWeight": 25, "agiWeight": 0, "chaWeight": 25, "difficulty": 28, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Human Trafficking", "desc": "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.004, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 30, "strWeight": 5, "defWeight": 5, "dexWeight": 30, "agiWeight": 0, "chaWeight": 30, "difficulty": 36, "territory": { "money": 1.5, "respect": 1.5, "wanted": 1.6 } }, { "name": "Terrorism", "desc": "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 2, "wanted": 2 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
+export const GangHTasks = ["Unassigned", "Ransomware", "Phishing", "Identity Theft", "DDoS Attacks", "Plant Virus", "Fraud & Counterfeiting", "Money Laundering", "Cyberterrorism", "Ethical Hacking", "Vigilante Justice", "Train Combat", "Train Hacking", "Train Charisma", "Territory Warfare"];
+export const GangTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Ransomware", "desc": "Assign this gang member to create and distribute ransomware<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.00005, "baseWanted": 0.0001, "baseMoney": 3, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Phishing", "desc": "Assign this gang member to attempt phishing scams and attacks<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.00008, "baseWanted": 0.003, "baseMoney": 7.5, "hackWeight": 85, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 15, "difficulty": 3.5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Identity Theft", "desc": "Assign this gang member to attempt identity theft<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0001, "baseWanted": 0.075, "baseMoney": 18, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "DDoS Attacks", "desc": "Assign this gang member to carry out DDoS attacks<br><br>Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0004, "baseWanted": 0.2, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Plant Virus", "desc": "Assign this gang member to create and distribute malicious viruses<br><br>Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0006, "baseWanted": 0.4, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 12, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Fraud & Counterfeiting", "desc": "Assign this gang member to commit financial fraud and digital counterfeiting<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0004, "baseWanted": 0.3, "baseMoney": 45, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Money Laundering", "desc": "Assign this gang member to launder money<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.001, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 75, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 25, "difficulty": 25, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Cyberterrorism", "desc": "Assign this gang member to commit acts of cyberterrorism<br><br>Greatly increases respect - Greatly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Ethical Hacking", "desc": "Assign this gang member to be an ethical hacker for corporations<br><br>Earns money - Lowers wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 3, "hackWeight": 90, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 10, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Mug People", "desc": "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00005, "baseWanted": 0.00005, "baseMoney": 3.6, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 10, "chaWeight": 15, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Deal Drugs", "desc": "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00006, "baseWanted": 0.002, "baseMoney": 15, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 20, "agiWeight": 20, "chaWeight": 60, "difficulty": 3.5, "territory": { "money": 1.2, "respect": 1, "wanted": 1.15 } }, { "name": "Strongarm Civilians", "desc": "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00004, "baseWanted": 0.02, "baseMoney": 7.5, "hackWeight": 10, "strWeight": 25, "defWeight": 25, "dexWeight": 20, "agiWeight": 10, "chaWeight": 10, "difficulty": 5, "territory": { "money": 1.6, "respect": 1.1, "wanted": 1.5 } }, { "name": "Run a Con", "desc": "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00012, "baseWanted": 0.05, "baseMoney": 45, "hackWeight": 0, "strWeight": 5, "defWeight": 5, "dexWeight": 25, "agiWeight": 25, "chaWeight": 40, "difficulty": 14, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Armed Robbery", "desc": "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00014, "baseWanted": 0.1, "baseMoney": 114, "hackWeight": 20, "strWeight": 15, "defWeight": 15, "dexWeight": 20, "agiWeight": 10, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Traffick Illegal Arms", "desc": "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.24, "baseMoney": 174, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 25, "difficulty": 32, "territory": { "money": 1.4, "respect": 1.3, "wanted": 1.25 } }, { "name": "Threaten & Blackmail", "desc": "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.125, "baseMoney": 72, "hackWeight": 25, "strWeight": 25, "defWeight": 0, "dexWeight": 25, "agiWeight": 0, "chaWeight": 25, "difficulty": 28, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Human Trafficking", "desc": "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.004, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 30, "strWeight": 5, "defWeight": 5, "dexWeight": 30, "agiWeight": 0, "chaWeight": 30, "difficulty": 36, "territory": { "money": 1.5, "respect": 1.5, "wanted": 1.6 } }, { "name": "Terrorism", "desc": "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 2, "wanted": 2 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
 export const GangCTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Mug People", "desc": "Assign this gang member to mug random people on the streets<br><br>Earns money - Slightly increases respect - Very slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00005, "baseWanted": 0.00005, "baseMoney": 3.6, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 10, "chaWeight": 15, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Deal Drugs", "desc": "Assign this gang member to sell drugs<br><br>Earns money - Slightly increases respect - Slightly increases wanted level - Scales slightly with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00006, "baseWanted": 0.002, "baseMoney": 15, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 20, "agiWeight": 20, "chaWeight": 60, "difficulty": 3.5, "territory": { "money": 1.2, "respect": 1, "wanted": 1.15 } }, { "name": "Strongarm Civilians", "desc": "Assign this gang member to extort civilians in your territory<br><br>Earns money - Slightly increases respect - Increases wanted - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.00004, "baseWanted": 0.02, "baseMoney": 7.5, "hackWeight": 10, "strWeight": 25, "defWeight": 25, "dexWeight": 20, "agiWeight": 10, "chaWeight": 10, "difficulty": 5, "territory": { "money": 1.6, "respect": 1.1, "wanted": 1.5 } }, { "name": "Run a Con", "desc": "Assign this gang member to run cons<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00012, "baseWanted": 0.05, "baseMoney": 45, "hackWeight": 0, "strWeight": 5, "defWeight": 5, "dexWeight": 25, "agiWeight": 25, "chaWeight": 40, "difficulty": 14, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Armed Robbery", "desc": "Assign this gang member to commit armed robbery on stores, banks and armored cars<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.00014, "baseWanted": 0.1, "baseMoney": 114, "hackWeight": 20, "strWeight": 15, "defWeight": 15, "dexWeight": 20, "agiWeight": 10, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Traffick Illegal Arms", "desc": "Assign this gang member to traffick illegal arms<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.24, "baseMoney": 174, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 25, "difficulty": 32, "territory": { "money": 1.4, "respect": 1.3, "wanted": 1.25 } }, { "name": "Threaten & Blackmail", "desc": "Assign this gang member to threaten and black mail high-profile targets<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": false, "isCombat": true, "baseRespect": 0.0002, "baseWanted": 0.125, "baseMoney": 72, "hackWeight": 25, "strWeight": 25, "defWeight": 0, "dexWeight": 25, "agiWeight": 0, "chaWeight": 25, "difficulty": 28, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Human Trafficking", "desc": "Assign this gang member to engage in human trafficking operations<br><br>Earns money - Increases respect - Increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.004, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 30, "strWeight": 5, "defWeight": 5, "dexWeight": 30, "agiWeight": 0, "chaWeight": 30, "difficulty": 36, "territory": { "money": 1.5, "respect": 1.5, "wanted": 1.6 } }, { "name": "Terrorism", "desc": "Assign this gang member to commit acts of terrorism<br><br>Greatly increases respect - Greatly increases wanted level - Scales heavily with territory", "isHacking": false, "isCombat": true, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 2, "wanted": 2 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
-export const GangHTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
+export const GangHTaskInfo = [{ "name": "Unassigned", "desc": "This gang member is currently idle", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Ransomware", "desc": "Assign this gang member to create and distribute ransomware<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.00005, "baseWanted": 0.0001, "baseMoney": 3, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Phishing", "desc": "Assign this gang member to attempt phishing scams and attacks<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.00008, "baseWanted": 0.003, "baseMoney": 7.5, "hackWeight": 85, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 15, "difficulty": 3.5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Identity Theft", "desc": "Assign this gang member to attempt identity theft<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0001, "baseWanted": 0.075, "baseMoney": 18, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "DDoS Attacks", "desc": "Assign this gang member to carry out DDoS attacks<br><br>Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0004, "baseWanted": 0.2, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Plant Virus", "desc": "Assign this gang member to create and distribute malicious viruses<br><br>Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0006, "baseWanted": 0.4, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 12, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Fraud & Counterfeiting", "desc": "Assign this gang member to commit financial fraud and digital counterfeiting<br><br>Earns money - Slightly increases respect - Slightly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.0004, "baseWanted": 0.3, "baseMoney": 45, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 20, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Money Laundering", "desc": "Assign this gang member to launder money<br><br>Earns money - Increases respect - Increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.001, "baseWanted": 1.25, "baseMoney": 360, "hackWeight": 75, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 25, "difficulty": 25, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Cyberterrorism", "desc": "Assign this gang member to commit acts of cyberterrorism<br><br>Greatly increases respect - Greatly increases wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0.01, "baseWanted": 6, "baseMoney": 0, "hackWeight": 80, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 20, "difficulty": 36, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Ethical Hacking", "desc": "Assign this gang member to be an ethical hacker for corporations<br><br>Earns money - Lowers wanted level", "isHacking": true, "isCombat": false, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 3, "hackWeight": 90, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 10, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Vigilante Justice", "desc": "Assign this gang member to be a vigilante and protect the city from criminals<br><br>Decreases wanted level", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": -0.001, "baseMoney": 0, "hackWeight": 20, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 0, "difficulty": 1, "territory": { "money": 1, "respect": 1, "wanted": 0.9 } }, { "name": "Train Combat", "desc": "Assign this gang member to increase their combat stats (str, def, dex, agi)", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 25, "defWeight": 25, "dexWeight": 25, "agiWeight": 25, "chaWeight": 0, "difficulty": 100, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Hacking", "desc": "Assign this gang member to train their hacking skills", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 100, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 0, "difficulty": 45, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Train Charisma", "desc": "Assign this gang member to train their charisma", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 0, "strWeight": 0, "defWeight": 0, "dexWeight": 0, "agiWeight": 0, "chaWeight": 100, "difficulty": 8, "territory": { "money": 1, "respect": 1, "wanted": 1 } }, { "name": "Territory Warfare", "desc": "Assign this gang member to engage in territorial warfare with other gangs. Members assigned to this task will help increase your gang's territory and will defend your territory from being taken.", "isHacking": true, "isCombat": true, "baseRespect": 0, "baseWanted": 0, "baseMoney": 0, "hackWeight": 15, "strWeight": 20, "defWeight": 20, "dexWeight": 20, "agiWeight": 20, "chaWeight": 5, "difficulty": 5, "territory": { "money": 1, "respect": 1, "wanted": 1 } }];
 export const GangEquips = [{ "name": "Baseball Bat", "type": "Weapon", "stats": { "str": 1.04, "def": 1.04 } }, { "name": "Katana", "type": "Weapon", "stats": { "str": 1.08, "def": 1.08, "dex": 1.08 } }, { "name": "Glock 18C", "type": "Weapon", "stats": { "str": 1.1, "def": 1.1, "dex": 1.1, "agi": 1.1 } }, { "name": "P90C", "type": "Weapon", "stats": { "str": 1.12, "def": 1.1, "agi": 1.1 } }, { "name": "Steyr AUG", "type": "Weapon", "stats": { "str": 1.2, "def": 1.15 } }, { "name": "AK-47", "type": "Weapon", "stats": { "str": 1.25, "def": 1.2 } }, { "name": "M15A10 Assault Rifle", "type": "Weapon", "stats": { "str": 1.3, "def": 1.25 } }, { "name": "AWM Sniper Rifle", "type": "Weapon", "stats": { "str": 1.3, "dex": 1.25, "agi": 1.3 } }, { "name": "Bulletproof Vest", "type": "Armor", "stats": { "def": 1.04 } }, { "name": "Full Body Armor", "type": "Armor", "stats": { "def": 1.08 } }, { "name": "Liquid Body Armor", "type": "Armor", "stats": { "def": 1.15, "agi": 1.15 } }, { "name": "Graphene Plating Armor", "type": "Armor", "stats": { "def": 1.2 } }, { "name": "Ford Flex V20", "type": "Vehicle", "stats": { "agi": 1.04, "cha": 1.04 } }, { "name": "ATX1070 Superbike", "type": "Vehicle", "stats": { "agi": 1.08, "cha": 1.08 } }, { "name": "Mercedes-Benz S9001", "type": "Vehicle", "stats": { "agi": 1.12, "cha": 1.12 } }, { "name": "White Ferrari", "type": "Vehicle", "stats": { "agi": 1.16, "cha": 1.16 } }, { "name": "NUKE Rootkit", "type": "Rootkit", "stats": { "hack": 1.05 } }, { "name": "Soulstealer Rootkit", "type": "Rootkit", "stats": { "hack": 1.1 } }, { "name": "Demon Rootkit", "type": "Rootkit", "stats": { "hack": 1.15 } }, { "name": "Hmap Node", "type": "Rootkit", "stats": { "hack": 1.12 } }, { "name": "Jack the Ripper", "type": "Rootkit", "stats": { "hack": 1.15 } }, { "name": "Bionic Arms", "type": "Augmentation", "stats": { "str": 1.3, "dex": 1.3 } }, { "name": "Bionic Legs", "type": "Augmentation", "stats": { "agi": 1.6 } }, { "name": "Bionic Spine", "type": "Augmentation", "stats": { "str": 1.15, "def": 1.15, "dex": 1.15, "agi": 1.15 } }, { "name": "BrachiBlades", "type": "Augmentation", "stats": { "str": 1.4, "def": 1.4 } }, { "name": "Nanofiber Weave", "type": "Augmentation", "stats": { "str": 1.2, "def": 1.2 } }, { "name": "Synthetic Heart", "type": "Augmentation", "stats": { "str": 1.5, "agi": 1.5 } }, { "name": "Synfibril Muscle", "type": "Augmentation", "stats": { "str": 1.3, "def": 1.3 } }, { "name": "BitWire", "type": "Augmentation", "stats": { "hack": 1.05 } }, { "name": "Neuralstimulator", "type": "Augmentation", "stats": { "hack": 1.15 } }, { "name": "DataJack", "type": "Augmentation", "stats": { "hack": 1.1 } }, { "name": "Graphene Bone Lacings", "type": "Augmentation", "stats": { "str": 1.7, "def": 1.7 } }];
 
 export function getGang() { return (Math.asd && Math.asd.gang) ? Math.asd.gang.faction : null; }
@@ -3185,10 +3154,10 @@ export function gangIsHacking(fac = (Math.asd && Math.asd.gang) ? Math.asd.gang.
 export function gangMemberInformation(member) { return (Math.asd && Math.asd.gang) ? Math.asd.gang.memberInfos.filter(a => a.name == member)[0] : null; }
 export function gangGetTask(taskName) { return GangTaskInfo.filter(a => a.name == taskName)[0]; }
 
-export function gangMemberTotalStats(member) { return eval('member.ha' + 'ck') + member.str + member.def + member.dex + member.agi + member.cha; }
+export function gangMemberTotalStats(member) { return member['hack'] + member.str + member.def + member.dex + member.agi + member.cha; }
 export function statWt(task, member) {
 	return 0.01 * (
-		task.hackWeight * eval('member.ha' + 'ck') +
+		task.hackWeight * member['hack'] +
 		task.strWeight * member.str +
 		task.defWeight * member.def +
 		task.dexWeight * member.dex +
@@ -3198,7 +3167,7 @@ export function statWt(task, member) {
 
 export function calcRespectGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
 	if (!gang) { return 0; }
-	if (task.baseRespect === 0) return 0;
+	if (!task || task.baseRespect === 0) return 0;
 	let statWeight = statWt(task, member);
 	statWeight -= 4 * task.difficulty;
 	if (statWeight <= 0) return 0;
@@ -3211,7 +3180,7 @@ export function calcRespectGain(member, task, gang = Math.asd ? Math.asd.gang : 
 
 export function calcWantedLevelGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
 	if (!gang) { return 0; }
-	if (task.baseWanted === 0) return 0;
+	if (!task || task.baseWanted === 0) return 0;
 	let statWeight = statWt(task, member);
 	statWeight -= 3.5 * task.difficulty;
 	if (statWeight <= 0) return 0;
@@ -3229,7 +3198,7 @@ export function calcWantedLevelGain(member, task, gang = Math.asd ? Math.asd.gan
 
 export function calcMoneyGain(member, task, gang = Math.asd ? Math.asd.gang : null) {
 	if (!gang) { return 0; }
-	if (task.baseMoney === 0) return 0;
+	if (!task || task.baseMoney === 0) return 0;
 	let statWeight = statWt(task, member);
 
 	statWeight -= 3.2 * task.difficulty;
@@ -3561,135 +3530,137 @@ export async function main(ns) {
 		await ns.sleep(0);
 		if (tar == 'home') {continue;} //never copy files back to home!
 		for (const sFile of sFiles) {
-			await ns.sleep(1);
+			await ns.sleep(0);
 			await ns.scp(sFile, 'home', tar);
 		}
 	}
 }
-test.js  (1.60)
+test.js  (3.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
-	asd=Math.asd; //if port's not empty, populate asd
+	asd = Math.asd; //if port's not empty, populate asd
 
 	ns.disableLog('scan');
 	ns.disableLog('sleep');
 	ns.clearLog();
 
-	asd.realbT = 12;
-//	ns.print(ns.gang.getGangInformation().territory)
+	//	asd.realbT = 12;
+	//	ns.print(ns.gang.getGangInformation().territory)
+
+	ns.print(ns.gang.getAscensionResult(asd.gang.members[0])['hack']);//'Ethical Hacking')
 
 
 	//await ns.writePort(20,10);
-//	const ph = ns.getPortHandle(20);
-//	ph.length = function() {return this.data.length;}
-//	ns.print(ph.length);
+	//	const ph = ns.getPortHandle(20);
+	//	ph.length = function() {return this.data.length;}
+	//	ns.print(ph.length);
 
-/*
-	let gangTasks = [];
-	let gangCTasks = [];
-	let gangHTasks = [];
-	let gangTaskInfo = [];
-	let gangCTaskInfo = [];
-	let gangHTaskInfo = [];
-
-	for (const task of ns.gang.getTaskNames()) {
-		const dat = ns.gang.getTaskStats(task);
-		gangTasks.push(dat.name); gangTaskInfo.push(dat);
-		if (dat.isCombat) {gangCTasks.push(dat.name);gangCTaskInfo.push(dat);}
-		if (dat.isHacking) {gangHTasks.push(dat.name);gangHTaskInfo.push(dat);}
-	}
-	ns.print(gangTasks);
-	ns.print(gangCTasks);
-	ns.print(gangHTasks);
-	ns.print(gangTaskInfo);
-	ns.print(gangCTaskInfo);
-	ns.print(gangHTaskInfo);
-
-	let gangEquipment = [];
-	for (const item of ns.gang.getEquipmentNames()) {
-		let equip = {};
-		equip.name = item;
-		equip.type = ns.gang.getEquipmentType(item);
-		equip.stats = ns.gang.getEquipmentStats(item);
-		gangEquipment.push(equip);
-	}
-	ns.print(gangEquipment);
-*/	
-
-/*
-	const pid = ns.exec('_weak.js','home',1,'phantasy',Math.random(), 1, false);
-	const cL = 0;
-	await ns.sleep(500);
-//	const pid = 0;
-while(true) {
-	await ns.sleep(1)
-	const rs = ns.getRunningScript(pid);
-//	ns.print(rs);
-//	if (!rs) { return false; }
-	let string = '';
-	for (const log of rs.logs) {
-		if (log.includes('Execut')) {
-			string = log.substring(log.indexOf(' in ') + 4, log.indexOf('(t=') - 1);
-			break;
-		}
-	}
-//	ns.print(string);
-//	if (string == '') { return false; }
-	const ms = nt.toms(string);
-ns.clearLog();
-	ns.print(ms - rs.onlineRunningTime * 1000 - cL);
-	//	if (ms - hT - 2*cL > 0) { return false; } //hack created during really highsec, clear it... so that the queue doesn't get stuck
-}
-*/
-//	ns.print(Object.keys(this.main));
-//	ns.print(this);
-
-/*
-	const host = 'lexo-corp';
-	const threads = 100;
-	let cores = 15;
-	const growthMultiplier = 2;
-	const hackAmt = 0.5;
+	/*
+		let gangTasks = [];
+		let gangCTasks = [];
+		let gangHTasks = [];
+		let gangTaskInfo = [];
+		let gangCTaskInfo = [];
+		let gangHTaskInfo = [];
 	
-	let player = ns.getPlayer();
-	let tardat = ns.getServer(host);
-	let srcdat = ns.getServer('home');
+		for (const task of ns.gang.getTaskNames()) {
+			const dat = ns.gang.getTaskStats(task);
+			gangTasks.push(dat.name); gangTaskInfo.push(dat);
+			if (dat.isCombat) {gangCTasks.push(dat.name);gangCTaskInfo.push(dat);}
+			if (dat.isHacking) {gangHTasks.push(dat.name);gangHTaskInfo.push(dat);}
+		}
+		ns.print(gangTasks);
+		ns.print(gangCTasks);
+		ns.print(gangHTasks);
+		ns.print(gangTaskInfo);
+		ns.print(gangCTaskInfo);
+		ns.print(gangHTaskInfo);
+	
+		let gangEquipment = [];
+		for (const item of ns.gang.getEquipmentNames()) {
+			let equip = {};
+			equip.name = item;
+			equip.type = ns.gang.getEquipmentType(item);
+			equip.stats = ns.gang.getEquipmentStats(item);
+			gangEquipment.push(equip);
+		}
+		ns.print(gangEquipment);
+	*/
 
-//	ns.print(player.hacking_money_mult);
+	/*
+		const pid = ns.exec('_weak.js','home',1,'phantasy',Math.random(), 1, false);
+		const cL = 0;
+		await ns.sleep(500);
+	//	const pid = 0;
+	while(true) {
+		await ns.sleep(1)
+		const rs = ns.getRunningScript(pid);
+	//	ns.print(rs);
+	//	if (!rs) { return false; }
+		let string = '';
+		for (const log of rs.logs) {
+			if (log.includes('Execut')) {
+				string = log.substring(log.indexOf(' in ') + 4, log.indexOf('(t=') - 1);
+				break;
+			}
+		}
+	//	ns.print(string);
+	//	if (string == '') { return false; }
+		const ms = nt.toms(string);
+	ns.clearLog();
+		ns.print(ms - rs.onlineRunningTime * 1000 - cL);
+		//	if (ms - hT - 2*cL > 0) { return false; } //hack created during really highsec, clear it... so that the queue doesn't get stuck
+	}
+	*/
+	//	ns.print(Object.keys(this.main));
+	//	ns.print(this);
 
-	let nsdat = {};
-	nsdat.sW = ns.weakenAnalyze(threads, cores); //returns amt weakened by this number of threads
-	nsdat.sG = ns.growthAnalyzeSecurity(threads); // sec increase for hack of size threads
-	nsdat.sH = ns.hackAnalyzeSecurity(threads); // sec increase for hack of size threads
-	nsdat.nG = ns.growthAnalyze(host, growthMultiplier, cores); //returns number of threads needed
-	nsdat.aH = ns.hackAnalyze(host); //percent of money stolen per hack thread
-	nsdat.cH = ns.hackAnalyzeChance(host); //Chance of success (only matters for valuation)
-	nsdat.tW = ns.getWeakenTime(host); //Time in ms to complete
-	nsdat.tG = ns.getGrowTime(host); //Time in ms to complete
-	nsdat.tH = ns.getHackTime(host); //Time in ms to complete
-
-	let ntdat = {};
-	ntdat.sW = nt.wAnalyze(threads, cores); //returns amt weakened by this number of threads
-	ntdat.sG = nt.gAnalyzeSecurity(threads); // sec increase for hack of size threads
-	ntdat.sH = nt.hAnalyzeSecurity(threads); // sec increase for hack of size threads
-	ntdat.nG = nt.gAnalyze(tardat, player, growthMultiplier, -1, cores); //returns number of threads needed
-	ntdat.nGha = nt.gAnalyzeLost(tardat, player, hackAmt, -1, cores); //returns number of threads needed
-	ntdat.aH = nt.hAnalyze(tardat, player); //percent of money stolen per hack thread
-	ntdat.cH = nt.hAnalyzeChance(tardat, player); //Chance of success (only matters for valuation)
-	ntdat.tW = nt.getWTime(tardat, player); //Time in ms to complete
-	ntdat.tG = nt.getGTime(tardat, player); //Time in ms to complete
-	ntdat.tH = nt.getHTime(tardat, player); //Time in ms to complete
-
-//	ns.print (nsdat);
-//	ns.print ('-----');
-//	ns.print (ntdat);
-
-	ns.print(asd.bests[0]);
-*/
+	/*
+		const host = 'lexo-corp';
+		const threads = 100;
+		let cores = 15;
+		const growthMultiplier = 2;
+		const hackAmt = 0.5;
+		
+		let player = ns.getPlayer();
+		let tardat = ns.getServer(host);
+		let srcdat = ns.getServer('home');
+	
+	//	ns.print(player.hacking_money_mult);
+	
+		let nsdat = {};
+		nsdat.sW = ns.weakenAnalyze(threads, cores); //returns amt weakened by this number of threads
+		nsdat.sG = ns.growthAnalyzeSecurity(threads); // sec increase for hack of size threads
+		nsdat.sH = ns.hackAnalyzeSecurity(threads); // sec increase for hack of size threads
+		nsdat.nG = ns.growthAnalyze(host, growthMultiplier, cores); //returns number of threads needed
+		nsdat.aH = ns.hackAnalyze(host); //percent of money stolen per hack thread
+		nsdat.cH = ns.hackAnalyzeChance(host); //Chance of success (only matters for valuation)
+		nsdat.tW = ns.getWeakenTime(host); //Time in ms to complete
+		nsdat.tG = ns.getGrowTime(host); //Time in ms to complete
+		nsdat.tH = ns.getHackTime(host); //Time in ms to complete
+	
+		let ntdat = {};
+		ntdat.sW = nt.wAnalyze(threads, cores); //returns amt weakened by this number of threads
+		ntdat.sG = nt.gAnalyzeSecurity(threads); // sec increase for hack of size threads
+		ntdat.sH = nt.hAnalyzeSecurity(threads); // sec increase for hack of size threads
+		ntdat.nG = nt.gAnalyze(tardat, player, growthMultiplier, -1, cores); //returns number of threads needed
+		ntdat.nGha = nt.gAnalyzeLost(tardat, player, hackAmt, -1, cores); //returns number of threads needed
+		ntdat.aH = nt.hAnalyze(tardat, player); //percent of money stolen per hack thread
+		ntdat.cH = nt.hAnalyzeChance(tardat, player); //Chance of success (only matters for valuation)
+		ntdat.tW = nt.getWTime(tardat, player); //Time in ms to complete
+		ntdat.tG = nt.getGTime(tardat, player); //Time in ms to complete
+		ntdat.tH = nt.getHTime(tardat, player); //Time in ms to complete
+	
+	//	ns.print (nsdat);
+	//	ns.print ('-----');
+	//	ns.print (ntdat);
+	
+		ns.print(asd.bests[0]);
+	*/
 }
 watchbests.js  (1.60)
 /** @param {NS} ns **/
