@@ -62,6 +62,8 @@ let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
 
+	if (!nt.hasSource(2)) {return;}
+
 	let loop = false;
 	if (ns.args.includes('loop')) { loop = true; }
 
@@ -628,7 +630,7 @@ export async function main(ns) {
 
 	if (asd.gang.territory >= 1.0) { ns.gang.setTerritoryWarfare(false); }
 }
-04_augments.js  (81.60)
+04_augments.js  (6.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -734,7 +736,7 @@ export async function main(ns) {
 	*/
 
 }
-04_bdoor.js  (65.60)
+04_bdoor.js  (5.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -773,7 +775,7 @@ export async function main(ns) {
 		}
 	}
 }
-04_buyall.js  (33.60)
+04_buyall.js  (3.60)
 /** @param {NS} ns **/
 export async function main(ns) {
 	try {
@@ -789,12 +791,12 @@ export async function main(ns) {
 		//ns.purchaseProgram('Formulas.exe');
 	} catch {}
 }
-04_buytor.js  (33.60)
+04_buytor.js  (3.60)
 /** @param {NS} ns **/
 export async function main(ns) {
 	try {ns.purchaseTor();} catch {};
 }
-04_crime.js  (89.60)
+04_crime.js  (7.10)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -869,7 +871,7 @@ export async function main(ns) {
 		while (ns.isBusy()) { await ns.sleep(100); } //wait for crime to complete
 	}
 }
-04_factionrep.js  (17.60)
+04_factionrep.js  (2.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -888,7 +890,7 @@ export async function main(ns) {
 		asd.factionReps = factionReps;
 	} catch {}
 }
-04_factions.js  (81.60)
+04_factions.js  (6.60)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 import * as mc from "masterconfig.js";
@@ -907,7 +909,7 @@ export async function main(ns) {
 
 	for (const fac of nt.gNeededFactions(ownedAugs)) { ns.print(fac); }
 }
-04_homecpu.js  (49.60)
+04_homecpu.js  (4.60)
 /** @param {NS} ns **/
 // attempts to upgrade your home server's CPU
 // run periodically to ensure your home computer stays upgaded
@@ -916,7 +918,7 @@ export async function main(ns) {
 	try { if (ns.upgradeHomeCores()) { ns.tprint('== upgraded home CPU =='); } }
 	catch { }
 }
-04_homeram.js  (49.60)
+04_homeram.js  (4.60)
 /** @param {NS} ns **/
 // attempts to upgrade your home server's RAM
 // run periodically to ensure your home computer stays upgaded
@@ -925,7 +927,7 @@ export async function main(ns) {
 	try { if (ns.upgradeHomeRam()) { ns.tprint('== upgraded home RAM =='); } }
 	catch { }
 }
-04_manualhack.js  (33.60)
+04_manualhack.js  (3.60)
 /** @param {NS} ns **/
 
 // just tries to manually hack whichever server you're currently conencted to (including home)
@@ -937,7 +939,7 @@ export async function main(ns) {
 	try { while (true) { await ns.sleep(0); await ns.manualHack(); } }
 	catch { }
 }
-04_ownedaugs.js  (81.60)
+04_ownedaugs.js  (6.60)
 /** @param {NS} ns **/
 
 // updates a list of your installed augments
@@ -1014,6 +1016,37 @@ export async function main(ns) {
 	for (const pair in asd.BitNodeMultipliers) {
 		ns.print(pair + ": " + asd.BitNodeMultipliers[pair]);
 	}
+}
+10_sleevedata.js  (1.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+	if (!asd.sleves) { asd.sleeves = []; }
+
+	if (!nt.hasSource(10)) { return; }
+
+	let loop = false;
+	if (ns.args.includes('loop')) { loop = true; }
+
+	do {
+		await ns.sleep(0);
+
+	} while (loop)
+}
+10_sleevejobs.js  (1.60)
+/** @param {NS} ns **/
+import * as nt from "notns.js";
+import * as mc from "masterconfig.js";
+
+let asd = {}; //all script data
+export async function main(ns) {
+	if (!Math.asd) { Math.asd = asd; }; asd = Math.asd; //initialize all scripts database
+
+	if (!nt.hasSource(10)) { return; }
 }
 MSperWeaken.js  (3.00)
 /** @param {NS} ns **/
@@ -1725,6 +1758,7 @@ export async function main(ns) {
 	asd.noticeTime = asd.noticeTime ?? (Date.now() + mc.NoticeInterval);
 	asd.ram = 4;
 	asd.gang = {};
+	asd.gang.faction = null;
 
 	try { ns.run('05_bitnode.js'); await ns.sleep(100); } catch { return; }
 	try { ns.run('00_sourcefiles.js'); await ns.sleep(100); } catch { return; }
@@ -1836,30 +1870,30 @@ export async function main(ns) {
 			await ns.sleep(500);
 		}
 		//7.60GB - ascends one gang member
-		if (nt.hasGang() && !scriptRunning(ns, '02_gangascend.js') && nt.canRun('home', '02_gangascend.js', true)) {
+		if (nt.hasSource(2) && nt.hasGang() && !scriptRunning(ns, '02_gangascend.js') && nt.canRun('home', '02_gangascend.js', true)) {
 			ns.run('02_gangascend.js'); await ns.sleep(500);
 		}
 		//2.60GB - creates your gang
-		if (!nt.hasGang() && !scriptRunning(ns, '02_ganginit.js') && nt.canRun('home', '02_ganginit.js', true)) {
+		if (nt.hasSource(2) && !nt.hasGang() && !scriptRunning(ns, '02_ganginit.js') && nt.canRun('home', '02_ganginit.js', true)) {
 			ns.run('02_ganginit.js'); await ns.sleep(500);
 		}
 		//8.60GB - gathers gang related data to asd.gang
-		if (nt.hasGang() && !scriptRunning(ns, '02_gangdata.js') && nt.canRun('home', '02_gangdata.js', true)) {
+		if (nt.hasSource(2) && !scriptRunning(ns, '02_gangdata.js') && nt.canRun('home', '02_gangdata.js', true)) {
 			if (nt.availRam('home') > (32 + nt.scriptCost('02_gangdata.js')) && scriptRunning(ns, 'masterhacknet.js')) {
 				ns.run('02_gangdata.js', 1, 'loop');
 			}
 			ns.run('02_gangdata.js'); await ns.sleep(500);
 		}
 		//5.60GB - equips gang members
-		if (nt.hasGang() && !scriptRunning(ns, '02_gangequip.js') && nt.canRun('home', '02_gangequip.js', true)) {
+		if (nt.hasSource(2) && nt.hasGang() && !scriptRunning(ns, '02_gangequip.js') && nt.canRun('home', '02_gangequip.js', true)) {
 			ns.run('02_gangequip.js'); await ns.sleep(500);
 		}
 		//3.60GB - manages gang member tasks
-		if (nt.hasGang() && !scriptRunning(ns, '02_gangtasks.js') && nt.canRun('home', '02_gangtasks.js', true)) {
+		if (nt.hasSource(2) && nt.hasGang() && !scriptRunning(ns, '02_gangtasks.js') && nt.canRun('home', '02_gangtasks.js', true)) {
 			ns.run('02_gangtasks.js'); await ns.sleep(500);
 		}
 		//3.60GB - manages gang warfate
-		if (nt.hasGang() && !scriptRunning(ns, '02_gangwarfare.js') && nt.canRun('home', '02_gangwarfare.js', true)) {
+		if (nt.hasSource(2) && nt.hasGang() && !scriptRunning(ns, '02_gangwarfare.js') && nt.canRun('home', '02_gangwarfare.js', true)) {
 			ns.run('02_gangwarfare.js'); await ns.sleep(500);
 		}
 	}
@@ -2286,7 +2320,7 @@ masterconfig.js  (1.60)
 /** @param {NS} ns **/
 //configuration constants for Drak's Masterhacker serries of scripts
 export const HomeReserveMax = 100; //max amt of ram to keep free at home
-export const HomeReserveMin = 10; //min amt of ram to keep free at home
+export const HomeReserveMin = 20; //min amt of ram to keep free at home
 export const HomeReservePortion = 0.25; //decimal% of home's ram to reserve, bounded by above
 // MasterScripts will generally attempt to reserve a HomeReservePortion of home's ram for processing scripts, bounced by the above
 
@@ -2300,7 +2334,7 @@ export const MaxProcess = 20000; //Maximum allowed concurrent processes - raisin
 // as long as it's low enough, everything's fine... Raise it a little too much though and your game will become unstabe, take longer to recover after autosaves, and just generally make lag spikes worse - MUCH worse
 // Try to find a level that doesn't tax your game too much, but also doesn't completely nerf your income.
 // Recommended ranges are 4000-10000; but is heavily hardware and environment dependant, so feel free to go outside these ranges as long as things feel comfortable for you
-export const BN = 1.0; //buffer threads extra grow and weaken threads to help keep stability
+export const BN = 1.1; //buffer threads extra grow and weaken threads to help keep stability
 export const MinbT = 3; //MINIMUM bufferTime (time between each attack - like h bT g bT w) in milliseconds;
 // lower MinbT means that attacks will try to land closer together, which leaves more room in the cycle for low security launches which keeps the order more stable
 // but too low and the engine's randomnesss makes them land out of order - resulting in more aborted hacks and reducing profit
@@ -2950,7 +2984,7 @@ import * as mc from "masterconfig.js";
 //  hN is the desired number of Hack threads to simulate for
 //  tarDat is a server object (ns.getServer()) for the target server, and is optional.
 //    If not provided, the idealized values will be used instead (from MasterData)
-//  cL is used to adjust strategies for high process count lag, and sub 1 hack thread, processes
+//  cL is used to adjust strategies for high process count lag, and hack <1 thread
 //  cores should be used to increase totRam and calculate actual launched threads at time of launch instead
 //    but is provided for here for situations where all or most processes get run on home - for instance
 function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar = target server: string, hN = number of hack threads to model: integer > 0
@@ -2963,13 +2997,13 @@ function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar 
 	ret.amt = ret.hA * ret.hN; //amt hacked (as portion of currentMoney) -- if Hacking/Growing properly, then of MaxMoney
 	ret.hS = nt.hAnalyzeSecurity(ret.hN); //amount of security generated by each hack
 	const postHackSec = Math.min(100, tardat.minDifficulty + ret.hS); //security level after hack hits (max 100)
-	ret.gN = Math.max(1, Math.ceil(mc.BN * nt.gAnalyzeLost(tardat, asd.player, ret.amt, postHackSec))); //number of Grow threads needed to offset each hack
+	ret.gN = Math.max(1, Math.ceil(mc.BN * nt.gAnalyzeByHackAmt(tardat, ret.amt, -1, asd.player, postHackSec))); //number of Grow threads needed to offset each hack
 	ret.gS = nt.gAnalyzeSecurity(ret.gN); //amount of security generated by the Grow threads
 	const postGrowSec = Math.min(100, tardat.minDifficulty + ret.gS); //security level after hack hits
 	ret.hC = 0.5 * (nt.hAnalyzeChance(tardat, asd.player) + nt.hAnalyzeChance(tardat, asd.player, postGrowSec));  // chance for a successful hack (at avg of minSec and minSec+growSec) - basically, assume hack lands first about half the time
 	ret.maxSI = 100 - tardat.minDifficulty; // Caps weaken threads (max security is 100, so max security needing weaken is 100-minSec)
 	ret.wA = nt.wAnalyze(1, cores); //amount of security offset by each weaken thread
-	ret.wN = Math.max(1, Math.ceil(Math.min(ret.maxSI, (2 * mc.BN * (ret.hS + ret.gS))) / ret.wA)); // number of weaken threads needed to offset each HackGrow pair
+	ret.wN = Math.max(1, Math.ceil(Math.min(ret.maxSI, (mc.BN * (ret.hS + ret.gS))) / ret.wA)); // number of weaken threads needed to offset each HackGrow pair
 
 	//determine process counts
 	ret.hT = tardat.hT; // time required to finish a minSec Hack
@@ -2988,15 +3022,14 @@ function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar 
 	ret.score = ret.value / ret.cost; // $ / ms / GB
 	return ret;
 }
-
-
+let ss;
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	if (ns.args.includes('clear') || !Array.isArray(asd.bests)) { asd.bests = []; }
 	//	asd.realcL = asd.realcL??mc.MincL;
-
+	ss=ns;
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
 	ns.disableLog('clearLog');
@@ -3042,7 +3075,7 @@ export async function main(ns) {
 
 				//check for a better target
 				ret = estBestScore(tar, hN, tardat);
-				while (hN == 1 && (ret.cost / maxCost > 1.0)) { //hN 1 profile to expensive, lengrhen cL to reduce cost
+				while (hN == 1 && (ret.cost / maxCost > 1.0)) { //hN 1 profile too expensive, lengrhen cL to reduce cost
 					await ns.sleep(0);
 					ret = estBestScore(tar, hN, tardat, Math.ceil(ret.cL * ret.cost / maxCost));
 				}
@@ -3053,6 +3086,7 @@ export async function main(ns) {
 					if (ret.amt < 0.01) { hN += hN < 10 ? 1 : hN < 100 ? 10 : Math.ceil(0.0001 / tardat.hA); } //step by 0.01%
 					else { hN += Math.ceil(0.02 / tardat.hA); } //step by 0.2%
 				}
+				ns.print(ret);
 			} while ((ret.score > 0) && (maxCost - ret.cost > 0) && (mc.MaxAmt - ret.amt > 0))
 			//updated best profile for server, re-sort and update global to new order (and profile)
 		}
@@ -3061,24 +3095,24 @@ export async function main(ns) {
 		count++;
 		// update targets
 
-/*
-		let targets = []; //prep targets array
-		for (let i = 0; i < bests.length && i < mc.MaxTargets && totCost < asd.totRam && totProc < mc.MaxProcess; i++) {
-			await ns.sleep(0);
-			//ToDo: sort targets low to high?
-			const tar = bests[i].tar;
-			let ti = targets.findIndex(a => a.tar == tar);
-			if (ti >= 0) {//already present, update and continue
-				targets[ti] = bests[i];
-				continue;
-			}
-			//ToDo check for too much RAM or too much Process)
-			if (targets.length < i) {targets.push(asd.bests[i]); continue;} //there's room in targets for this best, append and continue
-			else { //repace lowest target if best is better enough
-				for (let minTarget = 0; minTarget < )
-			}
-		}
-*/
+		/*
+				let targets = []; //prep targets array
+				for (let i = 0; i < bests.length && i < mc.MaxTargets && totCost < asd.totRam && totProc < mc.MaxProcess; i++) {
+					await ns.sleep(0);
+					//ToDo: sort targets low to high?
+					const tar = bests[i].tar;
+					let ti = targets.findIndex(a => a.tar == tar);
+					if (ti >= 0) {//already present, update and continue
+						targets[ti] = bests[i];
+						continue;
+					}
+					//ToDo check for too much RAM or too much Process)
+					if (targets.length < i) {targets.push(asd.bests[i]); continue;} //there's room in targets for this best, append and continue
+					else { //repace lowest target if best is better enough
+						for (let minTarget = 0; minTarget < )
+					}
+				}
+		*/
 
 	} while (loop);
 	ns.print('== MasterStrat complete ==');
@@ -3395,13 +3429,16 @@ Threads = log (GM / TM) / log (Base) // Log change of base rule (from log base "
 //capGrowMult false (default) = return threads for provided growth
 //capGrowMult true = return threads for provided growth OR needed for growth to max money on provided server
 //  whichever is less
-export function gAnalyze(server, player = Math.asd.player, growth, difficulty = -1, cores = 1, capGrowMult = false) {
+function gAnalyze(server, growthStartAmt, growthTargetAmt = -1, player = Math.asd.player, difficulty = -1, cores = 1, capGrowMult = false) {
+	//if (growthStartAmt == server.moneyMax) { return 0; } //no growth possible, no threads needed
+	if (growthStartAmt < 0) { growthStartAmt = 0; } // servers "can't" have less than 0 dollars on them
+	if (growthTargetAmt < 0) { growthTargetAmt = server.moneyMax; } // Allow 1% error to reduce overgrowth security gains
 	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
 	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
 
-	const fullGrow = Math.max(1.0, (server.moneyMax / server.moneyAvailable)); // grow multiplier needed to Max Money - must be >= 1
+	const growth = Math.max(1.0, Math.min(growthTargetAmt, growthTargetAmt / growthStartAmt));
+	const fullGrow = Math.max(1.0, Math.min(server.moneyMax, (server.moneyMax / server.moneyAvailable))); // grow multiplier needed to Max Money with 0 threads - must be >= 1 and <= maxMoney
 	const growthMultiplier = capGrowMult ? Math.min(growth, fullGrow) : growth; //if capMult, then cap growth to maxMoney
-
 	const CONSTANTSServerBaseGrowthRate = 1.03;
 	const CONSTANTSServerMaxGrowthRate = 1.0035;
 	const adjGrowthRate = (1 + (CONSTANTSServerBaseGrowthRate - 1) / difficulty); // adj exponential base for security
@@ -3411,12 +3448,25 @@ export function gAnalyze(server, player = Math.asd.player, growth, difficulty = 
 	const coreMultiplier = coreMult(cores);
 	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.ServerGrowthRate ?? 1) : 1); //total of all grow thread multipliers
 
-	const cycles = Math.log(growthMultiplier) / (Math.log(exponentialBase)) / threadMultiplier;
+	let cycles = 0.5 * Math.log(growthMultiplier) / (Math.log(exponentialBase)) / threadMultiplier; //this is the completely naive cycle amt and is always >= the real cycles required
+	let cycleAdjust = 0.5 * cycles;
+
+	let overGrowth = 0;
+	while (cycleAdjust > 0.5) { //go until we get an overage of less than $1 or we're adjusting by less than half a thread
+		overGrowth = (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier) - growthTargetAmt;
+		if (overGrowth < 0) { cycles += cycleAdjust; }
+		else if (overGrowth > 1) { cycles -= cycleAdjust; }
+		else { break; } //we're over by less than $1, return cycles
+		cycleAdjust *= 0.5; //basic 50% partition search
+	}
+
+	cycles = Math.ceil(cycles);
 	return cycles;
 }
-export function gAnalyzeLost(server, player = Math.asd.player, hackAmt, difficulty = -1.0, cores = 1, capGrowMult = false) {
-	const growth = 1 / (1 - Math.min(0.9999, hackAmt));
-	return gAnalyze(server, player, growth, difficulty, cores, capGrowMult);
+export function gAnalyzeByHackAmt(server, hackAmt, growthTargetAmt = -1, player = Math.asd.player, difficulty = -1.0, cores = 1, capGrowMult = false) {
+	if (growthTargetAmt < 0) { growthTargetAmt = server.moneyMax; }
+	const growthStartAmt = Math.floor(growthTargetAmt * Math.min(1, Math.max(0, (1 - hackAmt))));
+	return gAnalyze(server, growthStartAmt, growthTargetAmt, player, difficulty, cores, capGrowMult);
 }
 
 // UNTESTED - USE CAREFULLY (might trigger static ram warning)
@@ -3535,29 +3585,109 @@ export async function main(ns) {
 		}
 	}
 }
-test.js  (3.60)
+test.js  (5.10)
 /** @param {NS} ns **/
 import * as nt from "notns.js";
 
+//	ns.print(gAnalyze(ns.getServer('rho-construction'), 0, 0, ns.getPlayer()))
+function gAnalyze(server, growthStartAmt, growthTargetAmt = -1, player = Math.asd.player, difficulty = -1, cores = 1, capGrowMult = true) {
+	if (growthStartAmt == server.maxMoney) { return 0; } //no growth possible, no threads needed
+	if (growthStartAmt < 0) { growthStartAmt = 0; } // servers "can't" have less than 0 dollars on them
+	if (difficulty < 0) { difficulty = server.minDifficulty; } // Assume min security
+	else if (difficulty == 0) { difficulty = server.hackDifficulty; } // Use current security
+	if (growthTargetAmt < 0) { growthTargetAmt = server.moneyMax; } // Allow 1% error to reduce overgrowth security gains
+
+	server.moneyAvailable = 0; //testing
+	const growth = growthTargetAmt / growthStartAmt;
+	ss.print({ growthTargetAmt: growthTargetAmt, growthStartAmt: growthStartAmt });
+	const fullGrow = Math.max(1.0, Math.min(server.moneyMax, (server.moneyMax / server.moneyAvailable))); // grow multiplier needed to Max Money with 0 threads - must be >= 1 and <= maxMoney
+	ss.print({ growth: growth, fullGrow: fullGrow });
+	const growthMultiplier = capGrowMult ? Math.min(growth, fullGrow) : growth; //if capMult, then cap growth to maxMoney
+	const CONSTANTSServerBaseGrowthRate = 1.03;
+	const CONSTANTSServerMaxGrowthRate = 1.0035;
+	const adjGrowthRate = (1 + (CONSTANTSServerBaseGrowthRate - 1) / difficulty); // adj exponential base for security
+	const exponentialBase = Math.min(adjGrowthRate, CONSTANTSServerMaxGrowthRate) //cap growth rate
+
+	const serverGrowthPercentage = server.serverGrowth / 100.0;
+	const coreMultiplier = 1 + ((cores - 1) / 16);
+	const threadMultiplier = serverGrowthPercentage * player.hacking_grow_mult * coreMultiplier * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.ServerGrowthRate ?? 1) : 1); //total of all grow thread multipliers
+
+	let cycles = Math.log(growthMultiplier) / (Math.log(exponentialBase)) / threadMultiplier; //this is the completely naive cycle amt and is always >= the real cycles required
+	let cycleAdjust = 0.5 * cycles;
+
+	const outPlayer = { hacking_grow_mult: player.hacking_grow_mult };
+	const outServer = { minDifficulty: server.minDifficulty, hackDifficulty: difficulty, maxMoney: server.maxMoney, moneyAvailable: server.moneyAvailable, serverGrowth: server.serverGrowth }; //jsm - left off here
+	const outBN = { ServerGrowthRate: Math.asd.BitNodeMultipliers.ServerGrowthRate };
+	ss.print('=== player ===');
+	ss.print(outPlayer);
+	ss.print('=== server ===');
+	ss.print(outServer);
+	ss.print('=== bit node ===');
+	ss.print(outBN);
+	ss.print('=== init ===');
+	ss.print({ startAmt: growthStartAmt, targetAmt: growthTargetAmt, exponentialBase: exponentialBase, threadMultiplier: threadMultiplier })
+	ss.print('=== start ===');
+	ss.print({ cycleAdjust: cycleAdjust, cycles: cycles })
+	let overGrowth = 0;
+	while (cycleAdjust > 0.5) { //go until we get an overage of less than $1 or we're adjusting by less than half a thread
+		ss.asleep(0);
+		overGrowth = (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier) - growthTargetAmt;
+		ss.print({ cycleAdjust: cycleAdjust, cycles: cycles, overGrowth: overGrowth });
+		if (overGrowth < 0) { cycles += cycleAdjust; }
+		else if (overGrowth > 1) { cycles -= cycleAdjust; }
+		else { break; } //we're over by less than $1, return cycles
+		cycleAdjust = 0.5 * cycleAdjust; //basic 50% partition search
+	}
+	ss.print('=== END ===');
+	ss.print({ cycleAdjust: cycleAdjust, cycles: cycles, overGrowth: overGrowth });
+
+	cycles = Math.floor(cycles);
+	overGrowth = (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier) - growthTargetAmt;
+	ss.print({ cycleAdjust: cycleAdjust, cycles: cycles, overGrowth: overGrowth });
+	cycles -= 1;
+	overGrowth = (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier) - growthTargetAmt;
+	ss.print({ cycleAdjust: cycleAdjust, cycles: cycles, overGrowth: overGrowth });
+	cycles += 2;
+	overGrowth = (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier) - growthTargetAmt;
+	ss.print({ cycleAdjust: cycleAdjust, cycles: cycles, overGrowth: overGrowth });
+	ss.print('Max ??=?? (Avail + x)(gr ^ x*tm)');
+	ss.print({ targetMax: server.moneyMax });
+	ss.print({ Avail: server.moneyAvailable });
+	ss.print({ gr: exponentialBase });
+	ss.print({ tm: threadMultiplier });
+	ss.print({ x: cycles });
+	ss.print('grew to: ' + (growthStartAmt + cycles) * Math.pow(exponentialBase, cycles * threadMultiplier))
+
+	ss.print('== ns.growthAnalyze ==')
+	ss.print(ss.growthAnalyze('rho-construction', 999999999999));
+	return cycles;
+}
+
+let ss;
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
+	ss = ns;
 
 	ns.disableLog('scan');
 	ns.disableLog('sleep');
 	ns.clearLog();
 
+	let start = Date.now();
+	ns.print(gAnalyze(ns.getServer('rho-construction'), 0, 0, ns.getPlayer()))
+	ns.print(Date.now() - start);
+
+
+	/*
 	//	asd.realbT = 12;
 	//	ns.print(ns.gang.getGangInformation().territory)
-
-	ns.print(ns.gang.getAscensionResult(asd.gang.members[0])['hack']);//'Ethical Hacking')
-
-
-	//await ns.writePort(20,10);
-	//	const ph = ns.getPortHandle(20);
-	//	ph.length = function() {return this.data.length;}
-	//	ns.print(ph.length);
+	let dsa = ns.gang.getMemberInformation("0.18784631150274067");
+	dsa.hacking = function () { return 2; }
+	ns.print(asd.bests[0]);
+	ns.print('----- 1 -----');
+	ns.print(asd.bests[1]);
+	*/
 
 	/*
 		let gangTasks = [];
