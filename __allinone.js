@@ -540,11 +540,11 @@ export async function main(ns) {
 	if (!nt.hasGang()) return;
 
 	let powerTime = Date.now() + powerInterval;
-	const RepLimit = 2000000 * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.AugmentationRepCost ?? 1) : 1) 
+	const RepLimit = 2000000 * (Math.asd.BitNodeMultipliers ? (Math.asd.BitNodeMultipliers.AugmentationRepCost ?? 1) : 1)
 	while (true) {
 		const gang = asd.gang;
 		const gangRep = asd.factionReps[asd.factionReps.indexOf(gang.faction) + 1];
-		if (gang.territory < 0.999 && Date.now() > powerTime) { //asign to Teritory Power and await update
+		if (gang.territory < 1.0 && Date.now() > powerTime) { //asign to Teritory Power and await update
 			for (const member of gang.members) {
 				ns.gang.setMemberTask(member, 'Territory Warfare');
 			}
@@ -559,7 +559,7 @@ export async function main(ns) {
 		for (const member of gang.memberInfos) {
 			await ns.sleep(0);
 			const totStats = nt.gangMemberTotalStats(member);
-			if (totStats < minStats) {
+			if (totStats - minStats < 0) {
 				minStats = totStats;
 				minMember = member.name;
 			}
@@ -591,7 +591,7 @@ export async function main(ns) {
 
 		//assign Vigilante Justice
 		const justiceMembers = [];
-		while (totalWanted > 0) {
+		while (totalWanted > 0 && justiceMembers.length < gang.members.length - 2) {
 			await ns.sleep(0);
 			let minJustice = 0;
 			let minJMember = '';
@@ -600,7 +600,7 @@ export async function main(ns) {
 			for (const member of gang.memberInfos) {
 				if (minMember == member.name || justiceMembers.includes(member.name)) continue;
 				const justiceAmt = nt.calcWantedLevelGain(member, justiceTask, gang);
-				if (justiceAmt < minJustice) {
+				if (justiceAmt - minJustice < 0) {
 					minJustice = justiceAmt;
 					minJMember = member.name;
 				}
@@ -2458,7 +2458,8 @@ function buildOthers(ns) {
 				asd.homeCoreMult = nt.coreMult(sdat.cpuCores);
 				sdat.coreMult = asd.homeCoreMult;
 				sdat.parent = null;
-				totRam += Math.max(0, (sdat.maxRam - nt.homeReserve()) * asd.homeCoreMult);
+				asd.homeRam = Math.max(0, (sdat.maxRam - nt.homeReserve()) * asd.homeCoreMult);
+				totRam += asd.homeRam;
 			}
 			else {
 				sdat.coreMult = nt.coreMult(sdat.cpuCores);
@@ -3022,14 +3023,14 @@ function estBestScore(tar, hN, tardat = null, cL = mc.MincL, cores = 1) { //tar 
 	ret.score = ret.value / ret.cost; // $ / ms / GB
 	return ret;
 }
-let ss;
+
 let asd = {}; //all script data
 export async function main(ns) {
 	if (!Math.asd) { Math.asd = asd; } //if port's empty, initialize it
 	asd = Math.asd; //if port's not empty, populate asd
 	if (ns.args.includes('clear') || !Array.isArray(asd.bests)) { asd.bests = []; }
 	//	asd.realcL = asd.realcL??mc.MincL;
-	ss=ns;
+
 	ns.disableLog('disableLog');
 	ns.disableLog('sleep');
 	ns.disableLog('clearLog');
@@ -3070,24 +3071,27 @@ export async function main(ns) {
 				//|| (bests[bi].cL -1.1*asd.realcL > 0) //to far above realcL, remove profile
 				//|| (bests[bi].cL -0.9*asd.realcL < 0) //to far below realcL, remove profile
 			) { bests[bi] = ret; } //check that profile is still valid
+			let hNOneCase = false;
 			do {
 				await ns.sleep(0);
 
 				//check for a better target
 				ret = estBestScore(tar, hN, tardat);
-				while (hN == 1 && (ret.cost / maxCost > 1.0)) { //hN 1 profile too expensive, lengrhen cL to reduce cost
+				const noCoresMaxCost = maxCost - asd.homeRam * (asd.homeCoreMult-1); //hN 1 profiles can't shrink gN, so remove home cpu multiplier from totRam
+				while (hN == 1 && (ret.cost / noCoresMaxCost > 1.0)) { //hN 1 profile too expensive, lengrhen cL to reduce cost
 					await ns.sleep(0);
-					ret = estBestScore(tar, hN, tardat, Math.ceil(ret.cL * ret.cost / maxCost));
+					ret = estBestScore(tar, hN, tardat, Math.ceil(ret.cL * ret.cost / noCoresMaxCost));
+					hNOneCase = true;
 				}
-				if (ret.score > 0 && maxCost - ret.cost > 0 && (hN == 1 || mc.MaxAmt - ret.amt > 0) && ret.value - bests[bi].value > 0) { //new best target
+				if (ret.score > 0 && maxCost - ret.cost > 0 && (hNOneCase || mc.MaxAmt - ret.amt > 0) && ret.value - bests[bi].value > 0) { //new best target
 					bests[bi] = ret;
 				}
-				if (count % 10 == 9) { hN++; } else { //high detail pass every 10th
+				if (count % 10 == 9) { hN++; }
+				else { //high detail pass every 10th
 					if (ret.amt < 0.01) { hN += hN < 10 ? 1 : hN < 100 ? 10 : Math.ceil(0.0001 / tardat.hA); } //step by 0.01%
 					else { hN += Math.ceil(0.02 / tardat.hA); } //step by 0.2%
 				}
-				ns.print(ret);
-			} while ((ret.score > 0) && (maxCost - ret.cost > 0) && (mc.MaxAmt - ret.amt > 0))
+			} while (!hNOneCase && (ret.score > 0) && (maxCost - ret.cost > 0) && (mc.MaxAmt - ret.amt > 0))
 			//updated best profile for server, re-sort and update global to new order (and profile)
 		}
 		bests.sort((a, b) => (b.value - a.value > 0) ? 1 : (b.value == a.value) ? ((b.cost - a.cost > 0) ? -1 : 1) : -1);
